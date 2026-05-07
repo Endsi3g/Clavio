@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  cobalt:
+    image: ghcr.io/imputnet/cobalt:latest
+    container_name: clavio_cobalt
+    ports:
+      - "9001:9000"
+    environment:
+      - API_URL=http://localhost:9001
+      - API_NAME=Clavio Cobalt API
+      - CORS=1
+    restart: unless-stopped
+
+  n8n:
+    image: docker.n8n.io/n8nio/n8n
+    container_name: clavio_n8n
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - NODE_ENV=production
+      - WEBHOOK_URL=http://localhost:5678/
+      - GENERIC_TIMEZONE=America/New_York
+    volumes:
+      - n8n_data:/home/node/.n8n
+    restart: unless-stopped
+
+volumes:
+  n8n_data:
