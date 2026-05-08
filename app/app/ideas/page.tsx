@@ -1,37 +1,18 @@
 import { createServerClient } from '@/lib/supabase/server'
 import { WORKSPACE_ID } from '@/lib/types'
-import { StatusBadge } from '@/components/status-badge'
 import { FilterBar } from '@/components/filter-bar'
 import { EmptyState } from '@/components/empty-state'
 import { ErrorState } from '@/components/error-state'
-import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
-import { Plus, Sparkles } from 'lucide-react'
-import Link from 'next/link'
-import { formatDistanceToNow } from 'date-fns'
+import { Plus } from 'lucide-react'
 import type { Idea } from '@/lib/types'
 import { NewIdeaDialog } from './new-idea-dialog'
 import { RealtimeListener, RealtimeStatus } from '@/components/realtime-listener'
 import { IdeasGenerateButton } from './ideas-generate-button'
 import { getDictionary } from '@/lib/i18n/server'
-import { IdeaRowActions } from './idea-row-actions'
+import { IdeasViewClient } from './ideas-view-client'
 
 export const dynamic = 'force-dynamic'
-
-const PRIORITY_COLORS: Record<string, string> = {
-  high: 'text-red-600 bg-red-50 border-red-200',
-  medium: 'text-amber-600 bg-amber-50 border-amber-200',
-  low: 'text-slate-500 bg-slate-50 border-slate-200',
-}
 
 export default async function IdeasPage({
   searchParams,
@@ -138,7 +119,7 @@ export default async function IdeasPage({
         ]}
       />
 
-      {/* Table */}
+      {/* Content */}
       {!ideas || ideas.length === 0 ? (
         <EmptyState
           title="No ideas yet"
@@ -153,78 +134,7 @@ export default async function IdeasPage({
           }
         />
       ) : (
-        <Card>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="hover:bg-transparent">
-                    <TableHead className="w-[35%]">Title</TableHead>
-                    <TableHead>Format</TableHead>
-                    <TableHead>Platform</TableHead>
-                    <TableHead>Priority</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Updated</TableHead>
-                    <TableHead className="w-[60px]" />
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {ideas.map((idea: Idea) => (
-                    <TableRow key={idea.id}>
-                      <TableCell>
-                        <Link
-                          href={`/app/ideas/${idea.id}`}
-                          className="font-medium text-slate-900 hover:text-blue-600 transition-colors line-clamp-1"
-                        >
-                          {idea.title}
-                        </Link>
-                        {idea.description && (
-                          <p className="text-xs text-slate-400 mt-0.5 line-clamp-1">
-                            {idea.description}
-                          </p>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {idea.format ? (
-                          <span className="text-xs text-slate-600 capitalize">{idea.format}</span>
-                        ) : (
-                          <span className="text-slate-300">—</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {idea.platform ? (
-                          <span className="text-xs text-slate-600 capitalize">{idea.platform}</span>
-                        ) : (
-                          <span className="text-slate-300">—</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {idea.priority ? (
-                          <span
-                            className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium capitalize ${PRIORITY_COLORS[idea.priority] ?? ''}`}
-                          >
-                            {idea.priority}
-                          </span>
-                        ) : (
-                          <span className="text-slate-300">—</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <StatusBadge status={idea.status} />
-                      </TableCell>
-                      <TableCell className="text-xs text-slate-400 font-mono">
-                        {formatDistanceToNow(new Date(idea.updated_at), { addSuffix: true })}
-                      </TableCell>
-                      <TableCell>
-                        <IdeaRowActions ideaId={idea.id} />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
+        <IdeasViewClient ideas={ideas as Idea[]} />
       )}
     </div>
   )

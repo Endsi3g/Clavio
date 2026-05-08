@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Eye, Heart, Bookmark, Share2, TrendingUp, Clock, BarChart2 } from 'lucide-react'
+import { Eye, Heart, Bookmark, Share2, TrendingUp, Clock, BarChart2, MousePointerClick } from 'lucide-react'
 import { format, startOfWeek, startOfMonth } from 'date-fns'
 import Link from 'next/link'
 import type { Post, PostMetrics } from '@/lib/types'
@@ -191,11 +191,17 @@ export default async function AnalyticsPage({
       </div>
 
       {/* KPI cards */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
         <MetricCard label="Total views" value={totalViews.toLocaleString()} icon={<Eye className="h-5 w-5" />} />
         <MetricCard label="Total likes" value={totalLikes.toLocaleString()} icon={<Heart className="h-5 w-5" />} />
         <MetricCard label="Total saves" value={totalSaves.toLocaleString()} icon={<Bookmark className="h-5 w-5" />} />
         <MetricCard label="Total shares" value={totalShares.toLocaleString()} icon={<Share2 className="h-5 w-5" />} />
+        <MetricCard label="Avg retention" value={`${Math.round(avgRetention * 100)}%`} icon={<Clock className="h-5 w-5" />} />
+        <MetricCard
+          label="Avg views/post"
+          value={posts.length > 0 ? Math.round(totalViews / posts.length).toLocaleString() : '—'}
+          icon={<MousePointerClick className="h-5 w-5" />}
+        />
       </div>
 
       {/* Views over time chart */}

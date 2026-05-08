@@ -11,7 +11,7 @@ import Link from 'next/link'
 import { archiveIdea } from '@/app/actions/ideas'
 import { toast } from 'sonner'
 
-export function IdeaRowActions({ ideaId }: { ideaId: string }) {
+export function IdeaRowActions({ ideaId, status }: { ideaId: string; status: string }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -29,16 +29,18 @@ export function IdeaRowActions({ ideaId }: { ideaId: string }) {
             Open
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem
-          className="text-slate-600"
-          onSelect={async () => {
-            await archiveIdea(ideaId)
-            toast.success('Idea archived')
-          }}
-        >
-          <Archive className="mr-2 h-3.5 w-3.5" />
-          Archive
-        </DropdownMenuItem>
+        {status !== 'archived' && (
+          <DropdownMenuItem
+            className="text-slate-600"
+            onSelect={async () => {
+              await archiveIdea(ideaId)
+              toast.success('Idea archived')
+            }}
+          >
+            <Archive className="mr-2 h-3.5 w-3.5" />
+            Archive
+          </DropdownMenuItem>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   )

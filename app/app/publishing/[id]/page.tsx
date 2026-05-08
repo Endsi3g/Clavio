@@ -10,6 +10,7 @@ import Link from 'next/link'
 import { format } from 'date-fns'
 import type { Post, PostMetrics } from '@/lib/types'
 import { PublishPostButton } from '@/components/publish-post-button'
+import { PostPreview } from '@/components/post-preview'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,7 +22,7 @@ export default async function PostDetailPage({
   const { id } = await params
   const supabase = await createServerClient()
 
-  const [postResult, metricsResult] = await Promise.all([
+  const [postResult, metricsResult, workflowResult] = await Promise.all([
     supabase
       .from('posts')
       .select('*')
@@ -36,12 +37,27 @@ export default async function PostDetailPage({
       .order('collected_at', { ascending: false })
       .limit(1)
       .maybeSingle(),
+    supabase
+      .from('workflow_runs')
+      .select('id,workflow_name,status,started_at,finished_at,error_message')
+      .eq('entity_id', id)
+      .eq('workspace_id', WORKSPACE_ID)
+      .order('started_at', { ascending: true }),
   ])
 
   if (!postResult.data) notFound()
 
   const post: Post = postResult.data
   const metrics: PostMetrics | null = metricsResult.data
+  const workflowRuns = workflowResult.data ?? []
+
+  type StepStatus = 'success' | 'failed' | 'processing' | 'pending'
+  const toStepStatus = (s: string): StepStatus => {
+    if (s === 'published' || s === 'completed') return 'success'
+    if (s === 'failed') return 'failed'
+    if (s === 'processing') return 'processing'
+    return 'pending'
+  }
 
   const timelineSteps = [
     { label: 'Created', timestamp: post.created_at, status: 'success' as const },
@@ -50,30 +66,26 @@ export default async function PostDetailPage({
           {
             label: 'Scheduled',
             timestamp: post.scheduled_for,
-            status:
-              post.status === 'scheduled' || post.status === 'published'
-                ? ('success' as const)
-                : ('pending' as const),
+            status: (post.status === 'scheduled' || post.status === 'published'
+              ? 'success'
+              : 'pending') as StepStatus,
           },
         ]
       : []),
-    ...(post.published_at
-      ? [
-          {
-            label: 'Published',
-            timestamp: post.published_at,
-            status: 'success' as const,
-          },
-        ]
+    // Real workflow steps from DB
+    ...workflowRuns.map((run) => ({
+      id: run.id,
+      label: run.workflow_name.replace(/_/g, ' ').replace(/^publish /, 'Published via '),
+      timestamp: run.finished_at ?? run.started_at,
+      status: toStepStatus(run.status),
+      message: run.error_message ?? undefined,
+    })),
+    // If no workflow runs yet but post is published, show it
+    ...(post.published_at && workflowRuns.length === 0
+      ? [{ label: 'Published', timestamp: post.published_at, status: 'success' as const }]
       : []),
     ...(metrics
-      ? [
-          {
-            label: 'Metrics synced',
-            timestamp: metrics.collected_at,
-            status: 'success' as const,
-          },
-        ]
+      ? [{ label: 'Metrics synced', timestamp: metrics.collected_at, status: 'success' as const }]
       : []),
   ]
 
@@ -100,6 +112,7 @@ export default async function PostDetailPage({
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
+            <PostPreview post={post} />
             {(post.status === 'draft' || post.status === 'scheduled' || post.status === 'failed') && (
               <PublishPostButton postId={post.id} />
             )}

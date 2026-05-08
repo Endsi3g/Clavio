@@ -6,13 +6,14 @@ import { IdeaEditor as TiptapEditor } from '@/components/idea-editor'
 import { toast } from 'sonner'
 import type { Idea } from '@/lib/types'
 import { Button } from '@/components/ui/button'
-import { Sparkles, Search, BrainCircuit } from 'lucide-react'
+import { Sparkles, Search, BrainCircuit, Loader2 } from 'lucide-react'
 import { ResearchDialog } from '@/components/research-dialog'
 
 export function IdeaEditor({ idea }: { idea: Idea }) {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
-  const [content, setContent] = useState((idea as any).script || '')
+  const [expanding, setExpanding] = useState(false)
+  const [content, setContent] = useState((idea as Record<string, unknown>).script as string ?? '')
   const [researchOpen, setResearchOpen] = useState(false)
 
   async function handleSave() {
@@ -34,20 +35,53 @@ export function IdeaEditor({ idea }: { idea: Idea }) {
     }
   }
 
+  async function handleExpand() {
+    if (!content.trim() && !idea.description) {
+      toast.error('Add some content or description before expanding')
+      return
+    }
+    setExpanding(true)
+    try {
+      const res = await fetch('/api/ideas/expand', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          idea_id: idea.id,
+          title: idea.title,
+          description: idea.description,
+          current_script: content,
+          platform: idea.platform,
+          format: idea.format,
+        }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error ?? 'Expansion failed')
+
+      const expanded = json.data?.script ?? json.data?.hook ?? ''
+      if (!expanded) throw new Error('No script returned from AI')
+
+      setContent((prev) => prev ? `${prev}\n\n---\n\n${expanded}` : expanded)
+      toast.success('Script expanded by AI')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Expansion failed')
+    } finally {
+      setExpanding(false)
+    }
+  }
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1fr_250px] gap-6">
       <div className="space-y-4">
-        <TiptapEditor 
-          content={content} 
-          onChange={setContent} 
-          onSave={handleSave} 
-          saving={saving} 
+        <TiptapEditor
+          content={content}
+          onChange={setContent}
+          onSave={handleSave}
+          saving={saving}
         />
-        
         <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 text-sm text-blue-700">
           <p className="font-medium">Scripting Mode</p>
           <p className="mt-0.5 opacity-80">
-            This content is stored as the master script for this idea. 
+            This content is stored as the master script for this idea.
           </p>
         </div>
       </div>
@@ -59,33 +93,38 @@ export function IdeaEditor({ idea }: { idea: Idea }) {
             AI Actions
           </h3>
           <div className="grid gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               className="justify-start gap-2 h-9 text-slate-700"
               onClick={() => setResearchOpen(true)}
             >
               <Search className="h-3.5 w-3.5 text-blue-500" />
               AI Research
             </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               className="justify-start gap-2 h-9 text-slate-700"
-              disabled
+              onClick={handleExpand}
+              disabled={expanding}
             >
-              <Sparkles className="h-3.5 w-3.5 text-purple-500" />
-              Expand script
+              {expanding ? (
+                <Loader2 className="h-3.5 w-3.5 text-purple-500 animate-spin" />
+              ) : (
+                <Sparkles className="h-3.5 w-3.5 text-purple-500" />
+              )}
+              {expanding ? 'Expanding…' : 'Expand script'}
             </Button>
           </div>
         </div>
       </div>
 
-      <ResearchDialog 
-        open={researchOpen} 
+      <ResearchDialog
+        open={researchOpen}
         onOpenChange={setResearchOpen}
         onComplete={(newContent) => {
-          setContent((prev: string) => prev + `\n\n### Research Notes\n${newContent}`)
+          setContent((prev) => prev + `\n\n### Research Notes\n${newContent}`)
           toast.success('Research added to script')
         }}
       />

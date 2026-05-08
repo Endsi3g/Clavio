@@ -18,6 +18,8 @@ export async function GET(
       return retryFailedPosts(supabase)
     case 'cleanup-processing':
       return cleanupStuckProcessing(supabase)
+    case 'all':
+      return runAll(supabase)
     default:
       return NextResponse.json({ error: `Unknown task: ${task}` }, { status: 404 })
   }
@@ -100,18 +102,19 @@ async function retryFailedPosts(
 async function cleanupStuckProcessing(
   supabase: Awaited<ReturnType<typeof import('@/lib/supabase/server').createServerClient>>
 ) {
-  const cutoff = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString() // 2 hours ago
+  const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+  const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString()
 
-  // Reset videos stuck in processing
+  // Videos stuck in transcription processing (>2h)
   const { data: stuckVideos } = await supabase
     .from('videos')
     .update({ transcription_status: 'failed', updated_at: new Date().toISOString() })
     .eq('workspace_id', WORKSPACE_ID)
     .eq('transcription_status', 'processing')
-    .lt('updated_at', cutoff)
+    .lt('updated_at', twoHoursAgo)
     .select('id')
 
-  // Reset render_jobs stuck in processing
+  // Render jobs stuck (>2h)
   const { data: stuckJobs } = await supabase
     .from('render_jobs')
     .update({
@@ -121,18 +124,53 @@ async function cleanupStuckProcessing(
     })
     .eq('workspace_id', WORKSPACE_ID)
     .eq('status', 'processing')
-    .lt('started_at', cutoff)
+    .lt('started_at', twoHoursAgo)
     .select('id')
+
+  // Posts stuck in processing state (>30 min — n8n should respond in seconds)
+  const { data: stuckPosts } = await supabase
+    .from('posts')
+    .update({ status: 'failed', updated_at: new Date().toISOString() })
+    .eq('workspace_id', WORKSPACE_ID)
+    .eq('status', 'processing')
+    .lt('updated_at', thirtyMinAgo)
+    .select('id')
+
+  // Also mark the associated workflow_runs as failed
+  if (stuckPosts && stuckPosts.length > 0) {
+    const postIds = stuckPosts.map((p: { id: string }) => p.id)
+    await supabase
+      .from('workflow_runs')
+      .update({
+        status: 'failed',
+        error_message: 'Timed out — no callback received from n8n within 30 minutes',
+        finished_at: new Date().toISOString(),
+      })
+      .eq('workspace_id', WORKSPACE_ID)
+      .eq('status', 'processing')
+      .in('entity_id', postIds)
+  }
 
   await supabase.from('logs').insert({
     workspace_id: WORKSPACE_ID,
     severity: 'info',
     source: 'cron/cleanup-processing',
-    message: `Cleanup: reset ${stuckVideos?.length ?? 0} stuck videos, ${stuckJobs?.length ?? 0} stuck render jobs`,
+    message: `Cleanup: ${stuckVideos?.length ?? 0} stuck videos, ${stuckJobs?.length ?? 0} stuck render jobs, ${stuckPosts?.length ?? 0} stuck posts reset to failed`,
   })
 
   return NextResponse.json({
     stuck_videos_reset: stuckVideos?.length ?? 0,
     stuck_jobs_reset: stuckJobs?.length ?? 0,
+    stuck_posts_reset: stuckPosts?.length ?? 0,
   })
+}
+
+async function runAll(
+  supabase: Awaited<ReturnType<typeof import('@/lib/supabase/server').createServerClient>>
+) {
+  const [metrics, cleanup] = await Promise.all([
+    syncMetrics(supabase).then((r) => r.json()),
+    cleanupStuckProcessing(supabase).then((r) => r.json()),
+  ])
+  return NextResponse.json({ metrics, cleanup })
 }

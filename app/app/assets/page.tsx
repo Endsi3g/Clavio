@@ -165,7 +165,7 @@ export default async function AssetsPage({
                               </button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <AssetRowActions assetId={asset.id} assetUrl={asset.url} />
+                              <AssetRowActions assetId={asset.id} assetName={asset.name} assetUrl={asset.url} />
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>

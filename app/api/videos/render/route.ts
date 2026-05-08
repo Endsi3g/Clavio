@@ -1,15 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase/server'
 import { WORKSPACE_ID } from '@/lib/types'
-import { bundle } from '@remotion/bundler'
-import { renderMedia, selectComposition } from '@remotion/renderer'
 import path from 'path'
 import os from 'os'
-import fs from 'fs/promises'
 
 export async function POST(request: NextRequest) {
   try {
-    const { clip_id, composition = 'ClavioClip', brand_color, engine = 'remotion' } = await request.json()
+    const { clip_id, composition = 'ClavioClip', brand_color, engine = 'clipify' } = await request.json()
 
     if (!clip_id) {
       return NextResponse.json({ error: 'clip_id is required' }, { status: 400 })
@@ -17,7 +14,6 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createServerClient()
 
-    // Load clip + video
     const { data: clip, error: clipError } = await supabase
       .from('clips')
       .select('*, videos(*)')
@@ -34,7 +30,32 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Source video has no storage file' }, { status: 400 })
     }
 
-    // Get a signed URL for the source video
+    // Gate Remotion engine — requires @remotion/bundler and @remotion/renderer
+    if (engine === 'remotion') {
+      const remotionAvailable = await checkRemotionAvailable()
+      if (!remotionAvailable) {
+        return NextResponse.json(
+          {
+            error:
+              'Remotion engine is not installed. Run: npm install @remotion/bundler @remotion/renderer — or use engine="clipify" instead.',
+          },
+          { status: 503 }
+        )
+      }
+    }
+
+    // Gate Clipify engine — requires Python scripts in lib/clipify/scripts/
+    if (engine === 'clipify') {
+      const { checkClipifyAvailable } = await import('@/lib/clipify-engine')
+      const { available, missing } = checkClipifyAvailable()
+      if (!available) {
+        return NextResponse.json(
+          { error: `Clipify engine is missing Python scripts: ${missing.join(', ')}. See lib/clipify/scripts/.` },
+          { status: 503 }
+        )
+      }
+    }
+
     const { data: signedUrlData } = await supabase.storage
       .from('videos')
       .createSignedUrl(video.storage_path, 7200)
@@ -43,13 +64,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to get signed URL for source video' }, { status: 500 })
     }
 
-    // Create render job record
     const { data: renderJob, error: jobError } = await supabase
       .from('render_jobs')
       .insert({
         workspace_id: WORKSPACE_ID,
         clip_id,
-        engine: engine,
+        engine,
         composition_name: composition,
         status: 'processing',
         input_json: {
@@ -74,10 +94,9 @@ export async function POST(request: NextRequest) {
       source: 'videos/render',
       entity_type: 'render_job',
       entity_id: renderJob.id,
-      message: `Render started for clip: ${clip.title}`,
+      message: `Render started (engine=${engine}) for clip: ${clip.title}`,
     })
 
-    // Run Remotion render asynchronously (fire-and-forget with status update)
     runRender({
       supabase,
       renderJobId: renderJob.id,
@@ -88,11 +107,14 @@ export async function POST(request: NextRequest) {
       brandColor: brand_color ?? '#60A5FA',
       engine: engine as 'remotion' | 'clipify',
     }).catch(async (err) => {
-      await supabase.from('render_jobs').update({
-        status: 'failed',
-        error_message: err instanceof Error ? err.message : String(err),
-        finished_at: new Date().toISOString(),
-      }).eq('id', renderJob.id)
+      await supabase
+        .from('render_jobs')
+        .update({
+          status: 'failed',
+          error_message: err instanceof Error ? err.message : String(err),
+          finished_at: new Date().toISOString(),
+        })
+        .eq('id', renderJob.id)
       await supabase.from('logs').insert({
         workspace_id: WORKSPACE_ID,
         severity: 'error',
@@ -110,6 +132,15 @@ export async function POST(request: NextRequest) {
   }
 }
 
+async function checkRemotionAvailable(): Promise<boolean> {
+  try {
+    await import('@remotion/bundler')
+    return true
+  } catch {
+    return false
+  }
+}
+
 async function runRender({
   supabase,
   renderJobId,
@@ -120,7 +151,7 @@ async function runRender({
   brandColor,
   engine,
 }: {
-  supabase: any
+  supabase: Awaited<ReturnType<typeof import('@/lib/supabase/server').createServerClient>>
   renderJobId: string
   clipId: string
   videoUrl: string
@@ -129,52 +160,46 @@ async function runRender({
   brandColor: string
   engine: 'remotion' | 'clipify'
 }) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-  const workspaceId = WORKSPACE_ID
-
   if (engine === 'clipify') {
     const { clipifyEngine } = await import('@/lib/clipify-engine')
-    
-    // 1. Analyze motion to find speaker (Simplified for automation: assume 2 faces at fixed positions if 16:9)
-    // In a real app, these would be passed in or detected via a vision model
-    const leftROI = '400:400:400:300' // x:y:w:h
-    const rightROI = '1120:400:400:300' 
-    
-    // 2. Generate speaker segments
+
+    const leftROI = '400:400:400:300'
+    const rightROI = '1120:400:400:300'
+
     const speakerTimeline = await clipifyEngine.analyzeSpeakerMotion(videoUrl, leftROI, rightROI)
-    
-    // 3. Build Pan Expression
-    const leftX = 400 - 304 // Center of face - half of 9:16 strip width
+    const leftX = 400 - 304
     const rightX = 1120 - 304
     const panExpr = await clipifyEngine.buildPanExpression(JSON.stringify(speakerTimeline), leftX, rightX)
-    
-    // 4. Build Subtitles (using existing transcript segments)
+
     const { data: transcript } = await supabase
       .from('transcripts')
       .select('*')
       .eq('video_id', clip.video_id)
       .single()
-      
+
     let assContent = ''
     if (transcript) {
       assContent = await clipifyEngine.buildAssSubtitles(JSON.stringify(transcript.segments_json), 'opus')
     }
 
-    // 5. Final Render with FFmpeg
     const outputPath = path.join(os.tmpdir(), `clipify-${renderJobId}.mp4`)
+    const duration = (clip.end_ms - clip.start_ms) / 1000
+    const startSec = clip.start_ms / 1000
     const filter = `[0:v]crop=608:1080:x='${panExpr}':y=0,scale=1080:1920:flags=lanczos[v]`
-    const ffmpegCmd = `ffmpeg -y -i "${videoUrl}" -ss ${clip.start_ms / 1000} -t ${(clip.end_ms - clip.start_ms) / 1000} -filter_complex "${filter}" -map "[v]" -map 0:a -c:v libx264 -preset fast -crf 20 -c:a aac "${outputPath}"`
-    
+    const ffmpegCmd = `ffmpeg -y -ss ${startSec} -i "${videoUrl}" -t ${duration} -filter_complex "${filter}" -map "[v]" -map 0:a -c:v libx264 -preset fast -crf 20 -c:a aac "${outputPath}"`
+
     const { exec } = await import('child_process')
     const { promisify } = await import('util')
     await promisify(exec)(ffmpegCmd)
-    
-    // Upload and finish
+
     await uploadAndFinish({ supabase, renderJobId, clipId, outputPath })
     return
   }
 
-  // Existing Remotion logic...
+  // Remotion engine (requires @remotion/bundler + @remotion/renderer)
+  const { bundle } = await import('@remotion/bundler')
+  const { renderMedia, selectComposition } = await import('@remotion/renderer')
+
   const remotionRoot = path.join(process.cwd(), 'remotion', 'Root.tsx')
   const bundled = await bundle({ entryPoint: remotionRoot })
 
@@ -191,11 +216,7 @@ async function runRender({
     showCaption: true,
   }
 
-  const comp = await selectComposition({
-    serveUrl: bundled,
-    id: composition,
-    inputProps,
-  })
+  const comp = await selectComposition({ serveUrl: bundled, id: composition, inputProps })
 
   const outputPath = path.join(os.tmpdir(), `render-${renderJobId}.mp4`)
 
@@ -207,6 +228,7 @@ async function runRender({
     inputProps,
   })
 
+  await uploadAndFinish({ supabase, renderJobId, clipId, outputPath })
 }
 
 async function uploadAndFinish({
@@ -215,30 +237,33 @@ async function uploadAndFinish({
   clipId,
   outputPath,
 }: {
-  supabase: any
+  supabase: Awaited<ReturnType<typeof import('@/lib/supabase/server').createServerClient>>
   renderJobId: string
   clipId: string
   outputPath: string
 }) {
-  const fs = await import('fs/promises')
-  const fileBuffer = await fs.readFile(outputPath)
+  const { readFile, unlink } = await import('fs/promises')
+  const fileBuffer = await readFile(outputPath)
   const storagePath = `renders/${renderJobId}.mp4`
 
   const { error: uploadError } = await supabase.storage
     .from('videos')
     .upload(storagePath, fileBuffer, { contentType: 'video/mp4', upsert: true })
 
-  await fs.unlink(outputPath).catch(() => null)
+  await unlink(outputPath).catch(() => null)
 
   if (uploadError) throw new Error(`Storage upload failed: ${uploadError.message}`)
 
-  const { data: publicUrl } = supabase.storage.from('videos').getPublicUrl(storagePath)
+  const { data: publicData } = supabase.storage.from('videos').getPublicUrl(storagePath)
 
-  await supabase.from('render_jobs').update({
-    status: 'published',
-    output_url: publicUrl.publicUrl,
-    finished_at: new Date().toISOString(),
-  }).eq('id', renderJobId)
+  await supabase
+    .from('render_jobs')
+    .update({
+      status: 'published',
+      output_url: publicData.publicUrl,
+      finished_at: new Date().toISOString(),
+    })
+    .eq('id', renderJobId)
 
   await supabase.from('clips').update({ status: 'published' }).eq('id', clipId)
 
@@ -248,7 +273,7 @@ async function uploadAndFinish({
     source: 'videos/render',
     entity_type: 'render_job',
     entity_id: renderJobId,
-    message: `Render completed: ${publicUrl.publicUrl}`,
-    payload_json: { output_url: publicUrl.publicUrl },
+    message: `Render completed: ${publicData.publicUrl}`,
+    payload_json: { output_url: publicData.publicUrl },
   })
 }
