@@ -11,6 +11,10 @@
 | Storage Orchestrator | `/api/videos/upload` |
 | UI connectée | `GenerateIdeasDialog`, `UploadVideoDialog`, `VideoActions`, `RenderClipButton`, `PublishPostButton`, `VideoRowActions` |
 | Tiptap SSR Fix | `immediatelyRender: false` ajouté dans `IdeaEditor` |
+| Profile Page | Page profil complète avec onglets Sécurité/Notifications et upload d'avatar |
+| Notification System | Notification Center (bell), Server Actions et tables DB |
+| UI components | `Switch` de Shadcn ajouté et configuré |
+| Bugfix Next.js | Directive `'use server'` ajoutée aux actions pour éviter les erreurs d'import client |
 | Bugfix accessibilité | `CommandDialog` — `VisuallyHidden DialogTitle` ajouté |
 | Empty/Error states | Redesign visuel avec gradient + ring + icônes améliorées |
 
