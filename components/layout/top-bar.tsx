@@ -14,6 +14,7 @@ import {
 import { ThemeToggle } from '@/components/theme-toggle'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { CommandMenu } from '@/components/command-menu'
+import { NotificationCenter } from './notification-center'
 
 import { useI18n } from '@/components/i18n-provider'
 
@@ -73,29 +74,9 @@ export function TopBar({ title, notificationCount = 0 }: TopBarProps) {
 
         <ThemeToggle />
 
-        {/* Notifications Dropdown */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button
-              className="relative flex h-9 w-9 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100 transition-colors"
-              aria-label="Notifications"
-            >
-              <Bell className="h-4 w-4" />
-              {notificationCount > 0 && (
-                <span className="absolute top-1.5 right-1.5 flex h-3 w-3 items-center justify-center rounded-full bg-blue-500 text-[8px] font-semibold text-white leading-none">
-                  {notificationCount > 9 ? '9+' : notificationCount}
-                </span>
-              )}
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-64">
-            <DropdownMenuLabel>Notifications</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <div className="p-4 text-center text-xs text-slate-500 dark:text-slate-400">
-              No new notifications
-            </div>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <ThemeToggle />
+
+        <NotificationCenter />
 
         <div className="mx-1 h-5 w-px bg-slate-200 dark:bg-slate-800" />
 
