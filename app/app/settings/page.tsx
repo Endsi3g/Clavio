@@ -16,7 +16,18 @@ import {
 
 export const dynamic = 'force-dynamic'
 
-export default async function SettingsPage() {
+type SettingsTab = 'workspace' | 'publishing' | 'ai' | 'maintenance'
+
+export default async function SettingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string>>
+}) {
+  const params = await searchParams
+  const activeTab: SettingsTab = (['workspace', 'publishing', 'ai', 'maintenance'].includes(params.tab ?? '')
+    ? params.tab
+    : 'workspace') as SettingsTab
+
   const t = await getDictionary()
   const supabase = await createServerClient()
 
@@ -51,23 +62,31 @@ export default async function SettingsPage() {
         <p className="mt-0.5 text-sm text-slate-500">{t.settings.subtitle}</p>
       </div>
 
-      <Tabs defaultValue="workspace">
+      <Tabs defaultValue={activeTab}>
         <TabsList className="bg-slate-100">
-          <TabsTrigger value="workspace" className="gap-1.5">
-            <Building2 className="h-3.5 w-3.5" />
-            Workspace
+          <TabsTrigger value="workspace" className="gap-1.5" asChild>
+            <a href="?tab=workspace">
+              <Building2 className="h-3.5 w-3.5" />
+              Workspace
+            </a>
           </TabsTrigger>
-          <TabsTrigger value="publishing" className="gap-1.5">
-            <Send className="h-3.5 w-3.5" />
-            Publishing
+          <TabsTrigger value="publishing" className="gap-1.5" asChild>
+            <a href="?tab=publishing">
+              <Send className="h-3.5 w-3.5" />
+              Publishing
+            </a>
           </TabsTrigger>
-          <TabsTrigger value="ai" className="gap-1.5">
-            <Cpu className="h-3.5 w-3.5" />
-            AI
+          <TabsTrigger value="ai" className="gap-1.5" asChild>
+            <a href="?tab=ai">
+              <Cpu className="h-3.5 w-3.5" />
+              AI
+            </a>
           </TabsTrigger>
-          <TabsTrigger value="maintenance" className="gap-1.5">
-            <Wrench className="h-3.5 w-3.5" />
-            Maintenance
+          <TabsTrigger value="maintenance" className="gap-1.5" asChild>
+            <a href="?tab=maintenance">
+              <Wrench className="h-3.5 w-3.5" />
+              Maintenance
+            </a>
           </TabsTrigger>
         </TabsList>
 

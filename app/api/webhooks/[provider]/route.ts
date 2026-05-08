@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase/server'
 import { WORKSPACE_ID } from '@/lib/types'
 
+const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET
+
 // Handles callbacks FROM n8n or other automation providers
 export async function POST(
   request: NextRequest,
@@ -9,6 +11,19 @@ export async function POST(
 ) {
   try {
     const { provider } = await params
+
+    // Verify shared secret when configured (strongly recommended in production)
+    if (WEBHOOK_SECRET) {
+      const incomingSecret =
+        request.headers.get('x-clavio-secret') ??
+        request.headers.get('x-webhook-secret') ??
+        new URL(request.url).searchParams.get('secret')
+
+      if (incomingSecret !== WEBHOOK_SECRET) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      }
+    }
+
     const body = await request.json()
 
     const supabase = await createServerClient()

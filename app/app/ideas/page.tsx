@@ -216,7 +216,7 @@ export default async function IdeasPage({
                         {formatDistanceToNow(new Date(idea.updated_at), { addSuffix: true })}
                       </TableCell>
                       <TableCell>
-                        <IdeaRowActions ideaId={idea.id} />
+                        <IdeaRowActions ideaId={idea.id} status={idea.status} />
                       </TableCell>
                     </TableRow>
                   ))}

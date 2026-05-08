@@ -54,9 +54,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to generate signed URL for video' }, { status: 500 })
     }
 
-    // Call whisper.cpp or faster-whisper API (asr endpoint)
+    // Download the video file from signed URL and pass as binary to Whisper.
+    // whisper-asr-webservice /asr expects multipart `audio_file` (binary upload).
+    // Passing a URL directly is non-standard and not supported by most builds.
+    const videoFetchRes = await fetch(signedUrlData.signedUrl)
+    if (!videoFetchRes.ok) {
+      await supabase.from('videos').update({ transcription_status: 'failed' }).eq('id', video_id)
+      return NextResponse.json({ error: 'Failed to download video for transcription' }, { status: 502 })
+    }
+    const videoBlob = await videoFetchRes.blob()
+
     const formData = new FormData()
-    formData.append('audio_url', signedUrlData.signedUrl)
+    formData.append('audio_file', videoBlob, `${video_id}.mp4`)
     formData.append('task', 'transcribe')
     formData.append('language', 'auto')
     formData.append('output', 'json')
