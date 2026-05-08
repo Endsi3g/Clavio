@@ -10,6 +10,7 @@
 | Automation Bridge | `/api/posts/publish`, `/api/webhooks/[provider]` |
 | Storage Orchestrator | `/api/videos/upload` |
 | UI connectée | `GenerateIdeasDialog`, `UploadVideoDialog`, `VideoActions`, `RenderClipButton`, `PublishPostButton`, `VideoRowActions` |
+| Tiptap SSR Fix | `immediatelyRender: false` ajouté dans `IdeaEditor` |
 | Bugfix accessibilité | `CommandDialog` — `VisuallyHidden DialogTitle` ajouté |
 | Empty/Error states | Redesign visuel avec gradient + ring + icônes améliorées |
 
