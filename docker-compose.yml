@@ -28,5 +28,18 @@ services:
       - n8n_data:/home/node/.n8n
     restart: unless-stopped
 
+  whisper:
+    image: onnxruntime-whisper:latest
+    container_name: clavio_whisper
+    ports:
+      - "9000:9000"
+    environment:
+      - WHISPER_MODEL=base
+      - ASSET_PATH=/app/assets
+    volumes:
+      - whisper_models:/app/models
+    restart: unless-stopped
+
 volumes:
   n8n_data:
+  whisper_models:

@@ -14,6 +14,7 @@ import {
   Wrench,
   Globe,
 } from 'lucide-react'
+import { getDictionary } from '@/lib/i18n/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -23,6 +24,7 @@ interface SettingRow {
 }
 
 export default async function SettingsPage() {
+  const t = await getDictionary()
   const supabase = await createServerClient()
 
   let settings = null
@@ -53,8 +55,8 @@ export default async function SettingsPage() {
     <div className="space-y-5 max-w-3xl">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Settings</h1>
-        <p className="mt-0.5 text-sm text-slate-500">Workspace configuration and defaults</p>
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{t.settings.title}</h1>
+        <p className="mt-0.5 text-sm text-slate-500">{t.settings.subtitle}</p>
       </div>
 
       <Tabs defaultValue="workspace">
@@ -69,7 +71,7 @@ export default async function SettingsPage() {
           </TabsTrigger>
           <TabsTrigger value="ai" className="gap-1.5">
             <Cpu className="h-3.5 w-3.5" />
-            AI & Processing
+            AI
           </TabsTrigger>
           <TabsTrigger value="maintenance" className="gap-1.5">
             <Wrench className="h-3.5 w-3.5" />

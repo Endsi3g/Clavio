@@ -22,9 +22,11 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  // Save to localStorage on change
+  // Save to localStorage and cookie on change
   React.useEffect(() => {
     localStorage.setItem('clavio-locale', locale)
+    // Set cookie for server components
+    document.cookie = `clavio-locale=${locale}; path=/; max-age=${60 * 60 * 24 * 365}`
   }, [locale])
 
   const t = dictionaries[locale]

@@ -24,6 +24,9 @@ import { Plus, MoreHorizontal, ExternalLink, Calendar } from 'lucide-react'
 import Link from 'next/link'
 import { format, formatDistanceToNow } from 'date-fns'
 import type { Post } from '@/lib/types'
+import { NewPostButton } from './new-post-button'
+import { PublishCalendar } from './publish-calendar'
+import { getDictionary } from '@/lib/i18n/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -41,6 +44,7 @@ export default async function PublishingPage({
   searchParams: Promise<Record<string, string>>
 }) {
   const params = await searchParams
+  const t = await getDictionary()
   const supabase = await createServerClient()
 
   let posts: Post[] | null = null
@@ -138,7 +142,10 @@ export default async function PublishingPage({
               <TableCell>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="flex h-7 w-7 items-center justify-center rounded hover:bg-slate-100 transition-colors">
+                    <button 
+                      className="flex h-7 w-7 items-center justify-center rounded hover:bg-slate-100 transition-colors"
+                      aria-label="Post options"
+                    >
                       <MoreHorizontal className="h-4 w-4 text-slate-400" />
                     </button>
                   </DropdownMenuTrigger>
@@ -167,20 +174,14 @@ export default async function PublishingPage({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Publishing</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{t.publishing.title}</h1>
           <p className="mt-0.5 text-sm text-slate-500">
             {scheduled.length} scheduled · {published.length} published · {failed.length} failed
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="gap-1.5">
-            <Calendar className="h-3.5 w-3.5" />
-            Calendar view
-          </Button>
-          <Button size="sm" className="gap-1.5 bg-blue-500 hover:bg-blue-600">
-            <Plus className="h-3.5 w-3.5" />
-            New post
-          </Button>
+          <PublishCalendar posts={allPosts} />
+          <NewPostButton />
         </div>
       </div>
 
@@ -188,7 +189,7 @@ export default async function PublishingPage({
       <Tabs defaultValue="scheduled">
         <TabsList className="bg-slate-100">
           <TabsTrigger value="scheduled">
-            Scheduled
+            {t.publishing.tabs.scheduled}
             {scheduled.length > 0 && (
               <span className="ml-1.5 rounded-full bg-blue-100 px-1.5 py-0.5 text-[10px] font-medium text-blue-600">
                 {scheduled.length}
@@ -196,16 +197,16 @@ export default async function PublishingPage({
             )}
           </TabsTrigger>
           <TabsTrigger value="drafts">
-            Drafts
+            {t.publishing.tabs.drafts}
             {drafts.length > 0 && (
               <span className="ml-1.5 rounded-full bg-slate-200 px-1.5 py-0.5 text-[10px] font-medium text-slate-600">
                 {drafts.length}
               </span>
             )}
           </TabsTrigger>
-          <TabsTrigger value="published">Published</TabsTrigger>
+          <TabsTrigger value="published">{t.publishing.tabs.published}</TabsTrigger>
           <TabsTrigger value="failed">
-            Failed
+            {t.publishing.tabs.failed}
             {failed.length > 0 && (
               <span className="ml-1.5 rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-medium text-red-600">
                 {failed.length}

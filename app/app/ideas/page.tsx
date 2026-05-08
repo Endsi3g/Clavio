@@ -27,6 +27,8 @@ import { formatDistanceToNow } from 'date-fns'
 import type { Idea } from '@/lib/types'
 import { NewIdeaDialog } from './new-idea-dialog'
 import { RealtimeListener, RealtimeStatus } from '@/components/realtime-listener'
+import { IdeasGenerateButton } from './ideas-generate-button'
+import { getDictionary } from '@/lib/i18n/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -42,6 +44,7 @@ export default async function IdeasPage({
   searchParams: Promise<Record<string, string>>
 }) {
   const params = await searchParams
+  const t = await getDictionary()
   const supabase = await createServerClient()
 
   let query = supabase
@@ -84,22 +87,19 @@ export default async function IdeasPage({
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Ideas</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{t.ideas.title}</h1>
           <p className="mt-0.5 text-sm text-slate-500">
-            {ideas?.length ?? 0} idea{ideas?.length !== 1 ? 's' : ''} in workspace
+            {ideas?.length ?? 0} {t.ideas.title.toLowerCase()} in workspace
           </p>
         </div>
         <div className="flex flex-col items-end gap-2">
           <RealtimeStatus channelName="ideas-page" label="Live" />
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="gap-1.5">
-              <Sparkles className="h-3.5 w-3.5" />
-              Generate
-            </Button>
+            <IdeasGenerateButton />
             <NewIdeaDialog>
               <Button size="sm" className="gap-1.5 bg-blue-500 hover:bg-blue-600">
                 <Plus className="h-3.5 w-3.5" />
-                New idea
+                {t.ideas.newIdea}
               </Button>
             </NewIdeaDialog>
           </div>
@@ -152,7 +152,7 @@ export default async function IdeasPage({
             <NewIdeaDialog>
               <Button size="sm" className="gap-1.5 bg-blue-500 hover:bg-blue-600">
                 <Plus className="h-3.5 w-3.5" />
-                New idea
+                {t.ideas.newIdea}
               </Button>
             </NewIdeaDialog>
           }
@@ -160,87 +160,92 @@ export default async function IdeasPage({
       ) : (
         <Card>
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead className="w-[35%]">Title</TableHead>
-                  <TableHead>Format</TableHead>
-                  <TableHead>Platform</TableHead>
-                  <TableHead>Priority</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Updated</TableHead>
-                  <TableHead className="w-[60px]" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {ideas.map((idea: Idea) => (
-                  <TableRow key={idea.id}>
-                    <TableCell>
-                      <Link
-                        href={`/app/ideas/${idea.id}`}
-                        className="font-medium text-slate-900 hover:text-blue-600 transition-colors line-clamp-1"
-                      >
-                        {idea.title}
-                      </Link>
-                      {idea.description && (
-                        <p className="text-xs text-slate-400 mt-0.5 line-clamp-1">
-                          {idea.description}
-                        </p>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {idea.format ? (
-                        <span className="text-xs text-slate-600 capitalize">{idea.format}</span>
-                      ) : (
-                        <span className="text-slate-300">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {idea.platform ? (
-                        <span className="text-xs text-slate-600 capitalize">{idea.platform}</span>
-                      ) : (
-                        <span className="text-slate-300">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {idea.priority ? (
-                        <span
-                          className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium capitalize ${PRIORITY_COLORS[idea.priority] ?? ''}`}
-                        >
-                          {idea.priority}
-                        </span>
-                      ) : (
-                        <span className="text-slate-300">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <StatusBadge status={idea.status} />
-                    </TableCell>
-                    <TableCell className="text-xs text-slate-400 font-mono">
-                      {formatDistanceToNow(new Date(idea.updated_at), { addSuffix: true })}
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button className="flex h-7 w-7 items-center justify-center rounded hover:bg-slate-100 transition-colors">
-                            <MoreHorizontal className="h-4 w-4 text-slate-400" />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem asChild>
-                            <Link href={`/app/ideas/${idea.id}`}>
-                              <ExternalLink className="mr-2 h-3.5 w-3.5" />
-                              Open
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>Archive</DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="w-[35%]">Title</TableHead>
+                    <TableHead>Format</TableHead>
+                    <TableHead>Platform</TableHead>
+                    <TableHead>Priority</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Updated</TableHead>
+                    <TableHead className="w-[60px]" />
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {ideas.map((idea: Idea) => (
+                    <TableRow key={idea.id}>
+                      <TableCell>
+                        <Link
+                          href={`/app/ideas/${idea.id}`}
+                          className="font-medium text-slate-900 hover:text-blue-600 transition-colors line-clamp-1"
+                        >
+                          {idea.title}
+                        </Link>
+                        {idea.description && (
+                          <p className="text-xs text-slate-400 mt-0.5 line-clamp-1">
+                            {idea.description}
+                          </p>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {idea.format ? (
+                          <span className="text-xs text-slate-600 capitalize">{idea.format}</span>
+                        ) : (
+                          <span className="text-slate-300">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {idea.platform ? (
+                          <span className="text-xs text-slate-600 capitalize">{idea.platform}</span>
+                        ) : (
+                          <span className="text-slate-300">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {idea.priority ? (
+                          <span
+                            className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium capitalize ${PRIORITY_COLORS[idea.priority] ?? ''}`}
+                          >
+                            {idea.priority}
+                          </span>
+                        ) : (
+                          <span className="text-slate-300">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <StatusBadge status={idea.status} />
+                      </TableCell>
+                      <TableCell className="text-xs text-slate-400 font-mono">
+                        {formatDistanceToNow(new Date(idea.updated_at), { addSuffix: true })}
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button 
+                              className="flex h-7 w-7 items-center justify-center rounded hover:bg-slate-100 transition-colors"
+                              aria-label="More options"
+                            >
+                              <MoreHorizontal className="h-4 w-4 text-slate-400" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem asChild>
+                              <Link href={`/app/ideas/${idea.id}`}>
+                                <ExternalLink className="mr-2 h-3.5 w-3.5" />
+                                Open
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>Archive</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
       )}

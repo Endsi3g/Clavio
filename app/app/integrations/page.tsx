@@ -21,6 +21,7 @@ import {
 } from 'lucide-react'
 import { format, formatDistanceToNow } from 'date-fns'
 import type { Integration } from '@/lib/types'
+import { checkIntegrationStatus } from '@/lib/integrations-check'
 
 export const dynamic = 'force-dynamic'
 
@@ -67,6 +68,21 @@ const PROVIDER_CONFIG: Record<
     label: 'Instagram',
     icon: <Globe className="h-5 w-5" />,
     description: 'Instagram and Reels publishing',
+  },
+  scrapegraph: {
+    label: 'ScrapeGraphAI',
+    icon: <Database className="h-5 w-5" />,
+    description: 'Autonomous LLM-based web scraping',
+  },
+  hermes: {
+    label: 'Hermes Agent',
+    icon: <Cpu className="h-5 w-5" />,
+    description: 'Advanced multi-step reasoning agent',
+  },
+  cobalt: {
+    label: 'Cobalt',
+    icon: <Globe className="h-5 w-5" />,
+    description: 'Local video downloader service',
   },
 }
 
@@ -127,6 +143,14 @@ export default async function IntegrationsPage() {
   }
 
   const allIntegrations: Integration[] = integrations ?? []
+  
+  // Auto-detect status for local services
+  for (const integration of allIntegrations) {
+    if (['ollama', 'whisper', 'n8n', 'cobalt'].includes(integration.provider.toLowerCase())) {
+      integration.status = await checkIntegrationStatus(integration.provider)
+    }
+  }
+
   const connected = allIntegrations.filter((i) => i.status === 'connected').length
 
   // Build a complete list: configured + available to add

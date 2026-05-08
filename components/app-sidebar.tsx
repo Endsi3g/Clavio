@@ -10,18 +10,23 @@ import {
   Folder,
   Zap,
   Plug,
+  Link as LinkIcon,
   ScrollText,
   Settings,
-  Circle,
   ChevronUp,
   User2,
+  Languages,
+  BarChart3,
+  Files,
 } from 'lucide-react'
+import { useI18n } from '@/components/i18n-provider'
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -34,47 +39,44 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { VersionSwitcher } from './version-switcher'
-
-const navCategories = [
-  {
-    title: 'Workspace',
-    items: [
-      { label: 'Dashboard', href: '/app/dashboard', icon: LayoutDashboard },
-      { label: 'Analytics', href: '/app/analytics', icon: BarChart2 },
-    ]
-  },
-  {
-    title: 'Content Engine',
-    items: [
-      { label: 'Ideas', href: '/app/ideas', icon: Lightbulb },
-      { label: 'Videos', href: '/app/videos', icon: Video },
-      { label: 'Publishing', href: '/app/publishing', icon: Send },
-    ]
-  },
-  {
-    title: 'Resources',
-    items: [
-      { label: 'Assets', href: '/app/assets', icon: Folder },
-      { label: 'Automations', href: '/app/automations', icon: Zap },
-      { label: 'Integrations', href: '/app/integrations', icon: Plug },
-    ]
-  },
-  {
-    title: 'System',
-    items: [
-      { label: 'Logs', href: '/app/logs', icon: ScrollText },
-      { label: 'Profile', href: '/app/profile', icon: User2 },
-      { label: 'Settings', href: '/app/settings', icon: Settings },
-    ]
-  }
-]
+import { Button } from './ui/button'
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
+  const router = useRouter()
+  const { t, locale, setLocale } = useI18n()
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/')
+
+  const navCategories = [
+    {
+      title: t.sidebar.workspace,
+      items: [
+        { label: t.sidebar.dashboard, href: '/app/dashboard', icon: LayoutDashboard },
+        { label: t.sidebar.ideas, href: '/app/ideas', icon: Lightbulb },
+        { label: t.sidebar.videos, href: '/app/videos', icon: Video },
+        { label: t.sidebar.publishing, href: '/app/publishing', icon: Send },
+        { label: t.sidebar.analytics, href: '/app/analytics', icon: BarChart3 },
+      ]
+    },
+    {
+      title: t.sidebar.resources,
+      items: [
+        { label: t.sidebar.assets, href: '/app/assets', icon: Files },
+        { label: t.sidebar.automations, href: '/app/automations', icon: Zap },
+        { label: t.sidebar.integrations, href: '/app/integrations', icon: LinkIcon },
+      ]
+    },
+    {
+      title: t.sidebar.system,
+      items: [
+        { label: t.sidebar.logs, href: '/app/logs', icon: ScrollText },
+        { label: t.sidebar.settings, href: '/app/settings', icon: Settings },
+      ]
+    }
+  ]
 
   return (
     <Sidebar {...props}>
@@ -85,11 +87,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         />
       </SidebarHeader>
       <SidebarContent className="px-2 gap-0">
-        {navCategories.map((category, index) => (
+        {navCategories.map((category) => (
           <SidebarGroup key={category.title} className="pt-4 pb-2">
-            <div className="px-2 mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider dark:text-slate-400">
-              {category.title}
-            </div>
+            <SidebarGroupLabel>{category.title}</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {category.items.map((item) => (
@@ -109,6 +109,21 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarContent>
 
       <SidebarFooter className="p-4 border-t border-slate-200 dark:border-slate-800">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-full justify-start gap-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 mb-2"
+          onClick={() => {
+            const newLocale = locale === 'en' ? 'fr' : 'en'
+            setLocale(newLocale)
+            React.startTransition(() => {
+              router.refresh()
+            })
+          }}
+        >
+          <Languages className="h-4 w-4" />
+          {locale === 'en' ? 'Français' : 'English'}
+        </Button>
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>

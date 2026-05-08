@@ -1,6 +1,17 @@
+import { createServerClient } from '@/lib/supabase/server'
+import { WORKSPACE_ID } from '@/lib/types'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { ExternalLink, Settings, Play, CheckCircle2, XCircle } from 'lucide-react'
+import { ExternalLink, Settings, Play, CheckCircle2, XCircle, Clock } from 'lucide-react'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { formatDistanceToNow } from 'date-fns'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
@@ -9,6 +20,15 @@ export const dynamic = 'force-dynamic'
 const N8N_URL = process.env.N8N_BASE_URL || 'http://localhost:5678'
 
 export default async function AutomationsPage() {
+  const supabase = await createServerClient()
+  
+  const { data: workflowRuns } = await supabase
+    .from('workflow_runs')
+    .select('*')
+    .eq('workspace_id', WORKSPACE_ID)
+    .order('started_at', { ascending: false })
+    .limit(20)
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -81,20 +101,77 @@ export default async function AutomationsPage() {
         </Card>
       </div>
 
-      {/* Workflow Runs (Placeholder for Realtime) */}
+      {/* Workflow Runs */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base font-medium">Recent Workflow Runs</CardTitle>
           <CardDescription>History of automations triggered by Clavio</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="text-center py-8">
-            <p className="text-sm text-slate-500">
-              No recent runs found. Trigger a workflow to see logs here.
-            </p>
-          </div>
+        <CardContent className="p-0">
+          {!workflowRuns || workflowRuns.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-sm text-slate-500">
+                No recent runs found. Trigger a workflow to see logs here.
+              </p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead>Workflow</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Entity</TableHead>
+                  <TableHead>Duration</TableHead>
+                  <TableHead>Started</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {workflowRuns.map((run) => (
+                  <TableRow key={run.id}>
+                    <TableCell className="font-medium text-slate-900 capitalize">
+                      {run.workflow_name.replace(/-/g, ' ')}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1.5">
+                        {run.status === 'completed' ? (
+                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                        ) : run.status === 'failed' ? (
+                          <XCircle className="h-3.5 w-3.5 text-red-500" />
+                        ) : (
+                          <Clock className="h-3.5 w-3.5 text-amber-500" />
+                        )}
+                        <span className={`text-xs font-medium capitalize ${
+                          run.status === 'completed' ? 'text-emerald-700' :
+                          run.status === 'failed' ? 'text-red-700' :
+                          'text-amber-700'
+                        }`}>
+                          {run.status}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-xs text-slate-500">
+                      {run.entity_type ? (
+                        <span className="capitalize">{run.entity_type}</span>
+                      ) : (
+                        '—'
+                      )}
+                    </TableCell>
+                    <TableCell className="text-xs text-slate-500 font-mono">
+                      {run.finished_at && run.started_at
+                        ? `${Math.round((new Date(run.finished_at).getTime() - new Date(run.started_at).getTime()) / 1000)}s`
+                        : '—'}
+                    </TableCell>
+                    <TableCell className="text-xs text-slate-400 font-mono">
+                      {run.started_at ? formatDistanceToNow(new Date(run.started_at), { addSuffix: true }) : '—'}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>
   )
 }
+

@@ -4,12 +4,12 @@ import { notFound } from 'next/navigation'
 import { StatusBadge } from '@/components/status-badge'
 import { WorkflowTimeline } from '@/components/workflow-timeline'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
-import { ArrowLeft, Send, Globe, Clock, Calendar, BarChart2, Link2 } from 'lucide-react'
+import { ArrowLeft, Globe, Clock, Calendar, BarChart2, Link2 } from 'lucide-react'
 import Link from 'next/link'
-import { format, formatDistanceToNow } from 'date-fns'
+import { format } from 'date-fns'
 import type { Post, PostMetrics } from '@/lib/types'
+import { PublishPostButton } from '@/components/publish-post-button'
 
 export const dynamic = 'force-dynamic'
 
@@ -100,11 +100,8 @@ export default async function PostDetailPage({
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            {post.status === 'draft' && (
-              <Button size="sm" className="gap-1.5 bg-blue-500 hover:bg-blue-600">
-                <Send className="h-3.5 w-3.5" />
-                Publish now
-              </Button>
+            {(post.status === 'draft' || post.status === 'scheduled' || post.status === 'failed') && (
+              <PublishPostButton postId={post.id} />
             )}
           </div>
         </div>

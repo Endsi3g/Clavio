@@ -4,9 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Status
 
-Clavio is currently in the **specification phase**. The full product requirements are defined in `AGENTS.md` (authoritative source of truth) and `docs/`. No source code exists yet. All rules below reflect the intended implementation.
+Clavio is an operational **Autonomous Creator OS (v0.1.0)**. The 4 core systems are fully implemented and integrated:
+- **Smart Worker** — Ollama (llama3.2 for `/api/ideas/generate`) + local Whisper service for transcription.
+- **Autonomous Agents** — ScrapeGraphAI for deep research and Hermes Agent for advanced scripting.
+- **Render Engine** — Remotion + Clipify (Magic Reframing via FFmpeg) for high-fidelity social clips.
+- **Automation Bridge** — n8n webhooks for status-triggered publishing workflows.
+- **Bilingual Interface** — Full FR/EN support across the entire application.
 
-## Commands (once the project is bootstrapped)
+## Commands
 
 ```bash
 # Development

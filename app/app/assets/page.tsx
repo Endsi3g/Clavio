@@ -15,6 +15,9 @@ import { Upload, MoreHorizontal, Image, Music, Film, File, Type, Layout } from '
 import { formatDistanceToNow } from 'date-fns'
 import type { Asset } from '@/lib/types'
 import { InstagramCarousel } from '@/components/instagram-carousel'
+import { AssetsUploadButton } from './assets-upload-button'
+import { AssetRowActions } from './asset-row-actions'
+import { getDictionary } from '@/lib/i18n/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -40,6 +43,7 @@ export default async function AssetsPage({
 }: {
   searchParams: Promise<Record<string, string>>
 }) {
+  const t = await getDictionary()
   const params = await searchParams
   const supabase = await createServerClient()
 
@@ -73,15 +77,12 @@ export default async function AssetsPage({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Assets</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{t.assets.title}</h1>
           <p className="mt-0.5 text-sm text-slate-500">
-            {allAssets.length} asset{allAssets.length !== 1 ? 's' : ''} in workspace
+            {allAssets.length} asset{allAssets.length !== 1 ? 's' : ''} {t.dashboard.subtitle.split(' ').slice(-1)}
           </p>
         </div>
-        <Button size="sm" className="gap-1.5 bg-blue-500 hover:bg-blue-600">
-          <Upload className="h-3.5 w-3.5" />
-          Upload asset
-        </Button>
+        <AssetsUploadButton />
       </div>
 
       {/* Type filter pills */}
@@ -120,82 +121,111 @@ export default async function AssetsPage({
       </div>
 
       {/* Grid */}
-      {allAssets.length === 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-          <EmptyState
-            title="No assets yet"
-            description="Upload logos, fonts, music, b-roll, and templates to reuse across your content."
-            action={
-              <Button size="sm" className="gap-1.5 bg-blue-500 hover:bg-blue-600">
-                <Upload className="h-3.5 w-3.5" />
-                Upload asset
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-8">
+        <div className="space-y-6">
+          {allAssets.length === 0 ? (
+            <EmptyState
+              title="No assets yet"
+              description="Upload logos, fonts, music, b-roll, and templates to reuse across your content."
+              action={<AssetsUploadButton />}
+            />
+          ) : (
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
+              {allAssets.map((asset) => {
+                const config = ASSET_TYPE_CONFIG[asset.asset_type] ?? ASSET_TYPE_CONFIG.other
+                return (
+                  <Card key={asset.id} className="group overflow-hidden border-slate-200">
+                    <CardContent className="p-0">
+                      {/* Preview area */}
+                      <div className="aspect-video bg-slate-50 flex items-center justify-center border-b border-slate-100">
+                        {asset.mime_type?.startsWith('image/') ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={asset.url}
+                            alt={asset.name}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <div className={`rounded-full p-3 ${config.color}`}>{config.icon}</div>
+                        )}
+                      </div>
+                      {/* Info */}
+                      <div className="p-3">
+                        <div className="flex items-start justify-between gap-1">
+                          <p className="text-xs font-medium text-slate-900 truncate leading-tight">
+                            {asset.name}
+                          </p>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button 
+                                className="shrink-0 -mt-0.5 -mr-1 flex h-6 w-6 items-center justify-center rounded opacity-0 group-hover:opacity-100 hover:bg-slate-100 transition-all"
+                                aria-label="Asset options"
+                              >
+                                <MoreHorizontal className="h-3.5 w-3.5 text-slate-400" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <AssetRowActions assetId={asset.id} assetUrl={asset.url} />
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                        <div className="mt-1 flex items-center gap-1.5">
+                          <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${config.color}`}>
+                            {config.label}
+                          </span>
+                          <span className="text-[10px] text-slate-400">{formatBytes(asset.size_bytes)}</span>
+                        </div>
+                        <p className="mt-1 text-[10px] text-slate-400 font-mono">
+                          {formatDistanceToNow(new Date(asset.created_at), { addSuffix: true })}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Sidebar systems */}
+        <div className="space-y-6">
+          <Card className="border-blue-100 bg-blue-50/30">
+            <CardContent className="p-4 space-y-4">
+              <h3 className="text-sm font-semibold flex items-center gap-2 text-blue-900">
+                <Layout className="h-4 w-4" />
+                Brand Kit
+              </h3>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-slate-600">Primary Color</span>
+                  <div className="flex items-center gap-2">
+                    <div className="h-4 w-4 rounded-full bg-blue-500 border border-white shadow-sm" />
+                    <span className="text-[10px] font-mono text-slate-500 uppercase">#3b82f6</span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-slate-600">Secondary Color</span>
+                  <div className="flex items-center gap-2">
+                    <div className="h-4 w-4 rounded-full bg-slate-900 border border-white shadow-sm" />
+                    <span className="text-[10px] font-mono text-slate-500 uppercase">#0f172a</span>
+                  </div>
+                </div>
+              </div>
+              <Button size="sm" variant="outline" className="w-full text-xs h-8 border-blue-200 text-blue-700 bg-white hover:bg-blue-50">
+                Edit Brand Settings
               </Button>
-            }
-          />
+            </CardContent>
+          </Card>
+
           <div className="p-6 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-sm">
-            <h3 className="text-sm font-semibold mb-4 text-center">Instagram Carousel Demo</h3>
+            <h3 className="text-xs font-semibold mb-4 text-center text-slate-400 uppercase tracking-wider">Preview Engine</h3>
             <InstagramCarousel images={[{ url: '', alt: '1' }, { url: '', alt: '2' }, { url: '', alt: '3' }]} />
+            <p className="mt-4 text-[10px] text-center text-slate-500 italic">
+              Dynamic preview using Remotion render engine
+            </p>
           </div>
         </div>
-      ) : (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-          {allAssets.map((asset) => {
-            const config = ASSET_TYPE_CONFIG[asset.asset_type] ?? ASSET_TYPE_CONFIG.other
-            return (
-              <Card key={asset.id} className="group overflow-hidden">
-                <CardContent className="p-0">
-                  {/* Preview area */}
-                  <div className="aspect-video bg-slate-50 flex items-center justify-center border-b border-slate-100">
-                    {asset.mime_type?.startsWith('image/') ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={asset.url}
-                        alt={asset.name}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <div className={`rounded-full p-3 ${config.color}`}>{config.icon}</div>
-                    )}
-                  </div>
-                  {/* Info */}
-                  <div className="p-3">
-                    <div className="flex items-start justify-between gap-1">
-                      <p className="text-xs font-medium text-slate-900 truncate leading-tight">
-                        {asset.name}
-                      </p>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button className="shrink-0 -mt-0.5 -mr-1 flex h-6 w-6 items-center justify-center rounded opacity-0 group-hover:opacity-100 hover:bg-slate-100 transition-all">
-                            <MoreHorizontal className="h-3.5 w-3.5 text-slate-400" />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem asChild>
-                            <a href={asset.url} target="_blank" rel="noopener noreferrer">
-                              View
-                            </a>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>Copy URL</DropdownMenuItem>
-                          <DropdownMenuItem className="text-red-600">Delete</DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                    <div className="mt-1 flex items-center gap-1.5">
-                      <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${config.color}`}>
-                        {config.label}
-                      </span>
-                      <span className="text-[10px] text-slate-400">{formatBytes(asset.size_bytes)}</span>
-                    </div>
-                    <p className="mt-1 text-[10px] text-slate-400 font-mono">
-                      {formatDistanceToNow(new Date(asset.created_at), { addSuffix: true })}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            )
-          })}
-        </div>
-      )}
+      </div>
     </div>
   )
 }

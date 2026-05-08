@@ -70,6 +70,7 @@ export function FilterBar({
             <button
               onClick={() => onSearchChange('')}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              aria-label="Clear search"
             >
               <X className="h-4 w-4" />
             </button>

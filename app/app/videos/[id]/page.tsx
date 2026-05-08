@@ -22,6 +22,9 @@ import {
 import Link from 'next/link'
 import { format, formatDistanceToNow } from 'date-fns'
 import type { Video, Transcript, Clip, RenderJob } from '@/lib/types'
+import { VideoActions } from '@/components/video-actions'
+import { RenderClipButton } from '@/components/render-clip-button'
+import { VideoPlayer } from '@/components/video-player'
 
 export const dynamic = 'force-dynamic'
 
@@ -79,6 +82,13 @@ export default async function VideoDetailPage({
   const clips: Clip[] = clipsResult.data ?? []
   const renderJobs: RenderJob[] = renderResult.data ?? []
 
+  // Get signed URL for playback
+  let signedUrl = ''
+  if (video.storage_path) {
+    const { data: sData } = await supabase.storage.from('videos').createSignedUrl(video.storage_path, 3600)
+    signedUrl = sData?.signedUrl ?? ''
+  }
+
   return (
     <div className="space-y-5">
       {/* Back + header */}
@@ -99,16 +109,7 @@ export default async function VideoDetailPage({
               <p className="mt-1 text-xs font-mono text-slate-400 truncate">{video.source_url}</p>
             )}
           </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <Button variant="outline" size="sm" className="gap-1.5">
-              <Mic className="h-3.5 w-3.5" />
-              Transcribe
-            </Button>
-            <Button variant="outline" size="sm" className="gap-1.5">
-              <Scissors className="h-3.5 w-3.5" />
-              Detect clips
-            </Button>
-          </div>
+          <VideoActions videoId={video.id} hasTranscript={!!transcript} />
         </div>
       </div>
 
@@ -133,6 +134,15 @@ export default async function VideoDetailPage({
           </div>
         )}
       </div>
+
+      {/* Video Player Section */}
+      {signedUrl && (
+        <Card className="overflow-hidden border-none shadow-lg">
+          <CardContent className="p-0">
+            <VideoPlayer url={signedUrl} />
+          </CardContent>
+        </Card>
+      )}
 
       {/* 2-col layout */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -236,9 +246,7 @@ export default async function VideoDetailPage({
                           </div>
                           <div className="flex items-center gap-2 shrink-0">
                             <StatusBadge status={clip.status} />
-                            <Button variant="outline" size="sm" className="text-xs h-7">
-                              Render
-                            </Button>
+                            <RenderClipButton clipId={clip.id} />
                           </div>
                         </div>
                       </CardContent>

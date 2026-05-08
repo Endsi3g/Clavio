@@ -13,19 +13,15 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Progress } from '@/components/ui/progress'
-import { Upload, MoreHorizontal, ExternalLink, Mic, Scissors, Link as LinkIcon } from 'lucide-react'
+import { Link as LinkIcon, Mic, Scissors, Upload } from 'lucide-react'
 import Link from 'next/link'
-import { formatDistanceToNow, format } from 'date-fns'
+import { formatDistanceToNow } from 'date-fns'
 import type { Video } from '@/lib/types'
 import { RealtimeListener, RealtimeStatus } from '@/components/realtime-listener'
 import { ImportVideoDialog } from '@/components/import-video-dialog'
+import { VideosUploadButton } from './videos-upload-button'
+import { VideoRowActions } from './video-row-actions'
+import { getDictionary } from '@/lib/i18n/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -38,6 +34,7 @@ function formatDuration(seconds: number | null): string {
 
 export default async function VideosPage() {
   const supabase = await createServerClient()
+  const t = await getDictionary()
 
   const [videosResult, clipsCountResult] = await Promise.all([
     supabase
@@ -73,9 +70,9 @@ export default async function VideosPage() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Videos</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{t.videos.title}</h1>
           <p className="mt-0.5 text-sm text-slate-500">
-            {videos.length} video{videos.length !== 1 ? 's' : ''}
+            {videos.length} {t.videos.title.toLowerCase()}
             {processingCount > 0 && (
               <span className="ml-2 inline-flex items-center gap-1 text-blue-600">
                 · {processingCount} processing
@@ -92,10 +89,7 @@ export default async function VideosPage() {
                 Import from URL
               </Button>
             </ImportVideoDialog>
-            <Button size="sm" className="gap-1.5 bg-blue-500 hover:bg-blue-600">
-              <Upload className="h-3.5 w-3.5" />
-              Upload video
-            </Button>
+            <VideosUploadButton />
           </div>
         </div>
       </div>
@@ -103,14 +97,9 @@ export default async function VideosPage() {
       {/* Table */}
       {videos.length === 0 ? (
         <EmptyState
-          title="No videos yet"
+          title={t.videos.title + ' (Empty)'}
           description="Upload a source file to begin the video processing pipeline."
-          action={
-            <Button size="sm" className="gap-1.5 bg-blue-500 hover:bg-blue-600">
-              <Upload className="h-3.5 w-3.5" />
-              Upload video
-            </Button>
-          }
+          action={<VideosUploadButton />}
         />
       ) : (
         <Card>
@@ -171,23 +160,11 @@ export default async function VideosPage() {
                       {formatDistanceToNow(new Date(video.created_at), { addSuffix: true })}
                     </TableCell>
                     <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button className="flex h-7 w-7 items-center justify-center rounded hover:bg-slate-100 transition-colors">
-                            <MoreHorizontal className="h-4 w-4 text-slate-400" />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem asChild>
-                            <Link href={`/app/videos/${video.id}`}>
-                              <ExternalLink className="mr-2 h-3.5 w-3.5" />
-                              Open
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>Transcribe</DropdownMenuItem>
-                          <DropdownMenuItem>Detect clips</DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <VideoRowActions
+                        videoId={video.id}
+                        videoTitle={video.title}
+                        hasTranscript={false}
+                      />
                     </TableCell>
                   </TableRow>
                 ))}

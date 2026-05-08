@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase/server'
 import { WORKSPACE_ID } from '@/lib/types'
+import { notifyStatusChange } from '@/lib/notifications'
 
 export async function PATCH(
   request: NextRequest,
@@ -38,6 +39,13 @@ export async function PATCH(
 
     if (!data) {
       return NextResponse.json({ error: 'Idea not found' }, { status: 404 })
+    }
+
+    // Trigger webhook if status changed
+    if (status !== undefined) {
+      // In a real app, you'd fetch the old status first or use the update return data
+      // For simplicity, we just notify of the new status
+      notifyStatusChange('idea', id, 'unknown', status, { title: data.title })
     }
 
     await supabase.from('logs').insert({

@@ -78,8 +78,19 @@
   * {
     @apply border-border;
   }
+  html {
+    scroll-behavior: smooth;
+  }
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  /* Hide scrollbars globally */
+  * {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  *::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
   }
 }

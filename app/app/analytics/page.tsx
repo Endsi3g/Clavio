@@ -25,6 +25,7 @@ import {
 import { format } from 'date-fns'
 import Link from 'next/link'
 import type { Post, PostMetrics } from '@/lib/types'
+import { getDictionary } from '@/lib/i18n/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -33,6 +34,7 @@ type PostWithMetrics = Post & {
 }
 
 export default async function AnalyticsPage() {
+  const t = await getDictionary()
   const supabase = await createServerClient()
 
   let postsResult, metricsResult;
@@ -110,9 +112,9 @@ export default async function AnalyticsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Analytics Review</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{t.analytics.title}</h1>
         <p className="mt-0.5 text-sm text-slate-500">
-          {posts.length} published post{posts.length !== 1 ? 's' : ''} · {allMetrics.length} metric snapshot{allMetrics.length !== 1 ? 's' : ''}
+          {posts.length} {t.publishing.tabs.published.toLowerCase()} posts · {allMetrics.length} snapshot{allMetrics.length !== 1 ? 's' : ''}
         </p>
       </div>
 
@@ -154,7 +156,7 @@ export default async function AnalyticsPage() {
         <div className="space-y-4">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base font-semibold">By platform</CardTitle>
+              <CardTitle className="text-base font-semibold">{t.dashboard.byPlatform}</CardTitle>
             </CardHeader>
             <CardContent>
               {Object.keys(platformStats).length === 0 ? (
@@ -218,7 +220,7 @@ export default async function AnalyticsPage() {
             <CardHeader className="pb-3">
               <CardTitle className="text-base font-semibold flex items-center gap-2">
                 <TrendingUp className="h-4 w-4" />
-                Top performing posts
+                {t.analytics.ranking}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
