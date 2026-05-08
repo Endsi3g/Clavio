@@ -13,6 +13,10 @@ const statusConfig: Record<Status, { label: string; className: string }> = {
     label: 'Révision',
     className: 'bg-amber-100 text-amber-700 border-0',
   },
+  approved: {
+    label: 'Approuvé',
+    className: 'bg-emerald-100 text-emerald-700 border-0',
+  },
   scheduled: {
     label: 'Planifié',
     className: 'bg-violet-100 text-violet-700 border-0',
@@ -20,6 +24,10 @@ const statusConfig: Record<Status, { label: string; className: string }> = {
   published: {
     label: 'Publié',
     className: 'bg-emerald-100 text-emerald-700 border-0',
+  },
+  completed: {
+    label: 'Terminé',
+    className: 'bg-teal-100 text-teal-700 border-0',
   },
   failed: {
     label: 'Échec',

@@ -8,16 +8,12 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Progress } from '@/components/ui/progress'
 import {
   ArrowLeft,
   Mic,
   Scissors,
-  Film,
-  RotateCcw,
   Clock,
   FileText,
-  AlertCircle,
 } from 'lucide-react'
 import Link from 'next/link'
 import { format, formatDistanceToNow } from 'date-fns'
@@ -25,6 +21,7 @@ import type { Video, Transcript, Clip, RenderJob } from '@/lib/types'
 import { VideoActions } from '@/components/video-actions'
 import { RenderClipButton } from '@/components/render-clip-button'
 import { VideoPlayer } from '@/components/video-player'
+import { RenderTab } from './render-tab'
 
 export const dynamic = 'force-dynamic'
 
@@ -257,62 +254,7 @@ export default async function VideoDetailPage({
             </TabsContent>
 
             <TabsContent value="renders" className="mt-4">
-              {renderJobs.length === 0 ? (
-                <EmptyState
-                  title="No render jobs"
-                  description="Approve a clip and render it to see jobs here."
-                />
-              ) : (
-                <div className="space-y-3">
-                  {renderJobs.map((job) => (
-                    <Card key={job.id}>
-                      <CardContent className="p-4 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Film className="h-4 w-4 text-slate-400" />
-                            <span className="text-sm font-medium text-slate-900 font-mono">
-                              {job.composition_name ?? job.engine}
-                            </span>
-                          </div>
-                          <StatusBadge status={job.status} />
-                        </div>
-                        {job.status === 'processing' && (
-                          <Progress value={45} className="h-1.5" />
-                        )}
-                        {job.error_message && (
-                          <div className="flex items-start gap-1.5 rounded bg-red-50 px-3 py-2">
-                            <AlertCircle className="h-3.5 w-3.5 text-red-500 shrink-0 mt-0.5" />
-                            <p className="text-xs text-red-600">{job.error_message}</p>
-                          </div>
-                        )}
-                        {job.output_url && (
-                          <a
-                            href={job.output_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs text-blue-500 hover:text-blue-700 font-mono truncate block"
-                          >
-                            {job.output_url}
-                          </a>
-                        )}
-                        <div className="flex items-center justify-between">
-                          <p className="text-xs text-slate-400 font-mono">
-                            {job.started_at
-                              ? formatDistanceToNow(new Date(job.started_at), { addSuffix: true })
-                              : '—'}
-                          </p>
-                          {job.status === 'failed' && (
-                            <Button variant="outline" size="sm" className="h-7 text-xs gap-1">
-                              <RotateCcw className="h-3 w-3" />
-                              Retry
-                            </Button>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
+              <RenderTab initialJobs={renderJobs} />
             </TabsContent>
           </Tabs>
         </div>

@@ -275,14 +275,14 @@ export default async function DashboardPage() {
         {/* Status overview */}
         <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
           <div className="px-4 py-3.5 border-b border-slate-100 dark:border-slate-800">
-            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Workspace status</h2>
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t.dashboard.workspaceStatus}</h2>
           </div>
           <div className="p-4 space-y-3">
             {[
-              { label: 'Draft ideas', value: statusCounts.draft, color: 'bg-amber-400', href: '/app/ideas' },
-              { label: 'Published posts', value: statusCounts.published, color: 'bg-emerald-400', href: '/app/publishing' },
-              { label: 'Processing videos', value: statusCounts.processing, color: 'bg-blue-400', href: '/app/videos' },
-              { label: 'Failed items', value: statusCounts.failed, color: 'bg-red-400', href: '/app/logs' },
+              { label: t.dashboard.draftIdeas, value: statusCounts.draft, color: 'bg-amber-400', href: '/app/ideas' },
+              { label: t.dashboard.publishedPosts, value: statusCounts.published, color: 'bg-emerald-400', href: '/app/publishing' },
+              { label: t.dashboard.processingVideos, value: statusCounts.processing, color: 'bg-blue-400', href: '/app/videos' },
+              { label: t.dashboard.failedItems, value: statusCounts.failed, color: 'bg-red-400', href: '/app/logs' },
             ].map(stat => (
               <Link key={stat.label} href={stat.href} className="flex items-center justify-between group">
                 <div className="flex items-center gap-2.5">
@@ -300,7 +300,7 @@ export default async function DashboardPage() {
         {/* Performance */}
         <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
           <div className="px-4 py-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Performance</h2>
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t.dashboard.performance}</h2>
             <Link href="/app/analytics" className="flex items-center gap-0.5 text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium">
               View all <ChevronRight className="h-3.5 w-3.5" />
             </Link>
@@ -311,7 +311,7 @@ export default async function DashboardPage() {
                 <Eye className="h-4 w-4 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Total views</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{t.dashboard.totalViews}</p>
                 <p className="text-lg font-bold text-slate-900 dark:text-slate-100 leading-tight">{totalViews.toLocaleString()}</p>
               </div>
             </div>
@@ -320,7 +320,7 @@ export default async function DashboardPage() {
                 <Heart className="h-4 w-4 text-pink-600 dark:text-pink-400" />
               </div>
               <div>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Total likes</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{t.dashboard.totalLikes}</p>
                 <p className="text-lg font-bold text-slate-900 dark:text-slate-100 leading-tight">{totalLikes.toLocaleString()}</p>
               </div>
             </div>
@@ -330,7 +330,7 @@ export default async function DashboardPage() {
         {/* Platform breakdown */}
         <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
           <div className="px-4 py-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">By platform</h2>
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t.dashboard.byPlatform}</h2>
             <Link href="/app/analytics" className="flex items-center gap-0.5 text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium">
               View all <ChevronRight className="h-3.5 w-3.5" />
             </Link>
@@ -359,14 +359,14 @@ export default async function DashboardPage() {
         {/* Quick links */}
         <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
           <div className="px-4 py-3.5 border-b border-slate-100 dark:border-slate-800">
-            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Quick actions</h2>
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t.dashboard.quickActions}</h2>
           </div>
           <div className="p-3 space-y-1">
             {[
-              { label: 'New idea', href: '/app/ideas', icon: Lightbulb },
-              { label: 'Upload video', href: '/app/videos', icon: Play },
-              { label: 'New post draft', href: '/app/publishing', icon: FileText },
-              { label: 'View analytics', href: '/app/analytics', icon: TrendingUp },
+              { label: t.dashboard.newIdea, href: '/app/ideas', icon: Lightbulb },
+              { label: t.dashboard.uploadVideo, href: '/app/videos', icon: Play },
+              { label: t.dashboard.newPostDraft, href: '/app/publishing', icon: FileText },
+              { label: t.dashboard.viewAnalytics, href: '/app/analytics', icon: TrendingUp },
             ].map(action => (
               <Link
                 key={action.label}

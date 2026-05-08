@@ -32,6 +32,7 @@ type PostSummary = {
   scheduled_for: string | null
 }
 import { IdeaEditor } from './idea-editor'
+import { VariantCard } from './variant-card'
 
 export const dynamic = 'force-dynamic'
 
@@ -146,32 +147,7 @@ export default async function IdeaDetailPage({
               ) : (
                 <div className="space-y-3">
                   {variants.map((variant) => (
-                    <Card key={variant.id}>
-                      <CardContent className="p-4 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                            {variant.variant_type ?? 'Variant'}
-                          </span>
-                          <StatusBadge status={variant.status} />
-                        </div>
-                        {variant.hook && (
-                          <p className="text-sm font-medium text-slate-900">
-                            Hook: {variant.hook}
-                          </p>
-                        )}
-                        {variant.script && (
-                          <p className="text-sm text-slate-600 whitespace-pre-wrap line-clamp-4">
-                            {variant.script}
-                          </p>
-                        )}
-                        {variant.cta && (
-                          <p className="text-xs text-slate-500">CTA: {variant.cta}</p>
-                        )}
-                        <p className="text-xs text-slate-400 font-mono">
-                          {formatDistanceToNow(new Date(variant.created_at), { addSuffix: true })}
-                        </p>
-                      </CardContent>
-                    </Card>
+                    <VariantCard key={variant.id} variant={variant} ideaId={idea.id} />
                   ))}
                 </div>
               )}

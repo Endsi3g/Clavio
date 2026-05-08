@@ -12,11 +12,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Eye, Heart, Bookmark, Share2, TrendingUp, Clock } from 'lucide-react'
-import { format, subDays, subMonths, startOfWeek, startOfMonth } from 'date-fns'
+import { Eye, Heart, Bookmark, Share2, TrendingUp, Clock, BarChart2 } from 'lucide-react'
+import { format, startOfWeek, startOfMonth } from 'date-fns'
 import Link from 'next/link'
 import type { Post, PostMetrics } from '@/lib/types'
 import { getDictionary } from '@/lib/i18n/server'
+import { AnalyticsChart } from './analytics-chart'
+import type { ChartPoint } from './analytics-chart'
 
 export const dynamic = 'force-dynamic'
 
@@ -35,6 +37,36 @@ function getPeriodStart(period: Period): Date | null {
   if (period === 'week') return startOfWeek(now, { weekStartsOn: 1 })
   if (period === 'month') return startOfMonth(now)
   return null
+}
+
+function buildChartData(
+  allMetrics: PostMetrics[],
+  posts: Post[]
+): { data: ChartPoint[]; platforms: string[] } {
+  const postPlatform = posts.reduce<Record<string, string>>((acc, p) => {
+    acc[p.id] = p.platform
+    return acc
+  }, {})
+
+  const byDate: Record<string, Record<string, number>> = {}
+  for (const m of allMetrics) {
+    const date = format(new Date(m.collected_at), 'MMM d')
+    const platform = postPlatform[m.post_id]
+    if (!platform) continue
+    if (!byDate[date]) byDate[date] = {}
+    byDate[date][platform] = (byDate[date][platform] ?? 0) + (m.views ?? 0)
+  }
+
+  const platforms = [...new Set(Object.values(postPlatform))]
+  const data: ChartPoint[] = Object.entries(byDate)
+    .sort(([a], [b]) => new Date(a).getTime() - new Date(b).getTime())
+    .map(([date, vals]) => {
+      const point: ChartPoint = { date }
+      platforms.forEach((p) => { point[p] = vals[p] ?? 0 })
+      return point
+    })
+
+  return { data, platforms }
 }
 
 export default async function AnalyticsPage({
@@ -69,7 +101,7 @@ export default async function AnalyticsPage({
         .from('post_metrics')
         .select('*')
         .eq('workspace_id', WORKSPACE_ID)
-        .order('collected_at', { ascending: false }),
+        .order('collected_at', { ascending: true }),
     ])
   } catch (err: unknown) {
     const e = err as { message?: string; name?: string }
@@ -97,7 +129,7 @@ export default async function AnalyticsPage({
   const allMetrics: PostMetrics[] = metricsResult?.data ?? []
 
   const latestMetricsPerPost = allMetrics.reduce<Record<string, PostMetrics>>((acc, m) => {
-    if (!acc[m.post_id]) acc[m.post_id] = m
+    acc[m.post_id] = m
     return acc
   }, {})
 
@@ -126,6 +158,8 @@ export default async function AnalyticsPage({
   const topPosts = [...postsWithMetrics]
     .sort((a, b) => (b.latest_metrics?.views ?? 0) - (a.latest_metrics?.views ?? 0))
     .slice(0, 8)
+
+  const { data: chartData, platforms: chartPlatforms } = buildChartData(allMetrics, posts)
 
   return (
     <div className="space-y-6">
@@ -161,8 +195,23 @@ export default async function AnalyticsPage({
         <MetricCard label="Total views" value={totalViews.toLocaleString()} icon={<Eye className="h-5 w-5" />} />
         <MetricCard label="Total likes" value={totalLikes.toLocaleString()} icon={<Heart className="h-5 w-5" />} />
         <MetricCard label="Total saves" value={totalSaves.toLocaleString()} icon={<Bookmark className="h-5 w-5" />} />
-        <MetricCard label="Avg retention" value={`${Math.round(avgRetention * 100)}%`} icon={<Clock className="h-5 w-5" />} />
+        <MetricCard label="Total shares" value={totalShares.toLocaleString()} icon={<Share2 className="h-5 w-5" />} />
       </div>
+
+      {/* Views over time chart */}
+      {chartData.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-semibold flex items-center gap-2">
+              <BarChart2 className="h-4 w-4" />
+              {t.analytics.trends}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <AnalyticsChart data={chartData} platforms={chartPlatforms} />
+          </CardContent>
+        </Card>
+      )}
 
       {/* 2-col: platform + top posts */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -210,7 +259,10 @@ export default async function AnalyticsPage({
               <StatRow label="Published posts" value={posts.length} />
               <StatRow label="Total shares" value={totalShares.toLocaleString()} />
               <StatRow label="Total saves" value={totalSaves.toLocaleString()} />
-              <StatRow label="Avg retention" value={`${Math.round(avgRetention * 100)}%`} />
+              <StatRow
+                label="Avg retention"
+                value={`${Math.round(avgRetention * 100)}%`}
+              />
             </CardContent>
           </Card>
         </div>

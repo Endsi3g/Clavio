@@ -4,8 +4,10 @@ export type Status =
   | 'draft'
   | 'processing'
   | 'review'
+  | 'approved'
   | 'scheduled'
   | 'published'
+  | 'completed'
   | 'failed'
   | 'archived'
 

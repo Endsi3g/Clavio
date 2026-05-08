@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Bell, Check, Info, AlertTriangle, AlertCircle, CheckCircle2 } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Bell, Info, AlertTriangle, AlertCircle, CheckCircle2 } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,6 +11,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { getNotifications, markAsRead } from '@/app/actions/notifications'
+import { createClient } from '@/lib/supabase/client'
+import { WORKSPACE_ID } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { formatDistanceToNow } from 'date-fns'
 import { fr } from 'date-fns/locale'
@@ -18,6 +20,7 @@ import { fr } from 'date-fns/locale'
 export function NotificationCenter() {
   const [notifications, setNotifications] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const channelRef = useRef<ReturnType<ReturnType<typeof createClient>['channel']> | null>(null)
 
   const fetchNotifications = async () => {
     const data = await getNotifications()
@@ -27,15 +30,37 @@ export function NotificationCenter() {
 
   useEffect(() => {
     fetchNotifications()
-    // In a real app, we would set up a realtime subscription here
+
+    const supabase = createClient()
+    const channel = supabase
+      .channel('notifications-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `workspace_id=eq.${WORKSPACE_ID}`,
+        },
+        () => {
+          fetchNotifications()
+        }
+      )
+      .subscribe()
+
+    channelRef.current = channel
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [])
 
-  const unreadCount = notifications.filter(n => !n.is_read).length
+  const unreadCount = notifications.filter((n) => !n.is_read).length
 
   const handleMarkAsRead = async (id: string) => {
     const res = await markAsRead(id)
     if (res.success) {
-      setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n))
+      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, is_read: true } : n)))
     }
   }
 
@@ -52,7 +77,7 @@ export function NotificationCenter() {
     <DropdownMenu onOpenChange={(open) => open && fetchNotifications()}>
       <DropdownMenuTrigger asChild>
         <button
-          className="relative flex h-9 w-9 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100 transition-colors"
+          className="relative flex h-9 w-9 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition-colors"
           aria-label="Notifications"
         >
           <Bell className="h-4 w-4" />
@@ -75,26 +100,24 @@ export function NotificationCenter() {
             <div className="p-8 text-center text-xs text-slate-500">Aucune notification</div>
           ) : (
             notifications.map((n) => (
-              <DropdownMenuItem 
-                key={n.id} 
+              <DropdownMenuItem
+                key={n.id}
                 className={cn(
-                  "flex flex-col items-start gap-1 p-4 cursor-pointer focus:bg-slate-50 dark:focus:bg-slate-900",
-                  !n.is_read && "bg-blue-50/50 dark:bg-blue-900/10"
+                  'flex flex-col items-start gap-1 p-4 cursor-pointer focus:bg-slate-50',
+                  !n.is_read && 'bg-blue-50/50'
                 )}
                 onClick={() => handleMarkAsRead(n.id)}
               >
                 <div className="flex w-full items-start justify-between gap-2">
                   <div className="flex items-start gap-2">
                     <div className="mt-0.5">{getIcon(n.type)}</div>
-                    <span className={cn("text-sm font-medium", !n.is_read && "text-blue-700 dark:text-blue-400")}>
+                    <span className={cn('text-sm font-medium', !n.is_read && 'text-blue-700')}>
                       {n.title}
                     </span>
                   </div>
                   {!n.is_read && <div className="h-2 w-2 rounded-full bg-blue-500 mt-1.5" />}
                 </div>
-                <p className="text-xs text-slate-500 line-clamp-2 pl-6">
-                  {n.message}
-                </p>
+                <p className="text-xs text-slate-500 line-clamp-2 pl-6">{n.message}</p>
                 <span className="text-[10px] text-slate-400 pl-6 mt-1">
                   {formatDistanceToNow(new Date(n.created_at), { addSuffix: true, locale: fr })}
                 </span>
@@ -105,7 +128,7 @@ export function NotificationCenter() {
         {notifications.length > 0 && (
           <>
             <DropdownMenuSeparator className="m-0" />
-            <button className="w-full py-2.5 text-center text-xs font-medium text-blue-600 hover:bg-slate-50 dark:text-blue-400 dark:hover:bg-slate-900 transition-colors">
+            <button className="w-full py-2.5 text-center text-xs font-medium text-blue-600 hover:bg-slate-50 transition-colors">
               Voir tout
             </button>
           </>

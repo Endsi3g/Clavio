@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   Lightbulb,
   Video,
+  Scissors,
   Send,
   BarChart2,
   Folder,
@@ -36,6 +37,7 @@ const primaryNav: NavItem[] = [
   { label: 'Dashboard', href: '/app/dashboard', icon: <LayoutDashboard className="h-4 w-4" /> },
   { label: 'Ideas', href: '/app/ideas', icon: <Lightbulb className="h-4 w-4" /> },
   { label: 'Videos', href: '/app/videos', icon: <Video className="h-4 w-4" /> },
+  { label: 'Clips', href: '/app/clips', icon: <Scissors className="h-4 w-4" /> },
   { label: 'Publishing', href: '/app/publishing', icon: <Send className="h-4 w-4" /> },
   { label: 'Analytics', href: '/app/analytics', icon: <BarChart2 className="h-4 w-4" /> },
 ]
