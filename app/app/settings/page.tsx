@@ -4,24 +4,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-  Building2,
-  Palette,
-  Send,
-  Cpu,
-  Wrench,
-  Globe,
-} from 'lucide-react'
+import { Building2, Send, Cpu, Wrench } from 'lucide-react'
 import { getDictionary } from '@/lib/i18n/server'
+import {
+  saveWorkspaceSettings,
+  savePublishingSettings,
+  saveAISettings,
+  clearLogs,
+} from '@/app/actions/settings'
 
 export const dynamic = 'force-dynamic'
-
-interface SettingRow {
-  key: string
-  value: string | null
-}
 
 export default async function SettingsPage() {
   const t = await getDictionary()
@@ -33,11 +26,10 @@ export default async function SettingsPage() {
       .from('settings')
       .select('key, value_json')
       .eq('workspace_id', WORKSPACE_ID)
-    
     if (error) throw error
     settings = data
   } catch (err) {
-    throw err // Let the global error.tsx handle it
+    throw err
   }
 
   const settingsMap = (settings ?? []).reduce<Record<string, unknown>>((acc, s) => {
@@ -48,12 +40,12 @@ export default async function SettingsPage() {
   const workspaceName = (settingsMap['workspace_name'] as string) ?? 'Clavio Default'
   const workspaceLocale = (settingsMap['workspace_locale'] as string) ?? 'en'
   const defaultPlatform = (settingsMap['default_platform'] as string) ?? ''
-  const ollamaModel = (settingsMap['ollama_model'] as string) ?? 'llama3'
+  const hashtagLimit = (settingsMap['hashtag_limit'] as number) ?? 10
+  const ollamaModel = (settingsMap['ollama_model'] as string) ?? 'llama3.2'
   const whisperModel = (settingsMap['whisper_model'] as string) ?? 'base'
 
   return (
     <div className="space-y-5 max-w-3xl">
-      {/* Header */}
       <div>
         <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{t.settings.title}</h1>
         <p className="mt-0.5 text-sm text-slate-500">{t.settings.subtitle}</p>
@@ -85,37 +77,40 @@ export default async function SettingsPage() {
             <CardHeader className="pb-4">
               <CardTitle className="text-base font-semibold">Workspace identity</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="workspace-name">Workspace name</Label>
-                <Input
-                  id="workspace-name"
-                  defaultValue={workspaceName}
-                  placeholder="My workspace"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="workspace-locale">Default locale</Label>
-                <Input
-                  id="workspace-locale"
-                  defaultValue={workspaceLocale}
-                  placeholder="en or fr"
-                />
-                <p className="text-xs text-slate-400">
-                  Used for AI generation language preference.
-                </p>
-              </div>
-              <div className="space-y-1.5">
-                <Label>Workspace ID</Label>
-                <p className="text-xs font-mono text-slate-500 bg-slate-50 rounded px-3 py-2 border border-slate-200">
-                  {WORKSPACE_ID}
-                </p>
-              </div>
-              <div className="flex justify-end">
-                <Button size="sm" className="bg-blue-500 hover:bg-blue-600">
-                  Save workspace
-                </Button>
-              </div>
+            <CardContent>
+              <form action={saveWorkspaceSettings} className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="workspace-name">Workspace name</Label>
+                  <Input
+                    id="workspace-name"
+                    name="workspace_name"
+                    defaultValue={workspaceName}
+                    placeholder="My workspace"
+                    required
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="workspace-locale">Default locale</Label>
+                  <Input
+                    id="workspace-locale"
+                    name="workspace_locale"
+                    defaultValue={workspaceLocale}
+                    placeholder="en or fr"
+                  />
+                  <p className="text-xs text-slate-400">Used for AI generation language preference.</p>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Workspace ID</Label>
+                  <p className="text-xs font-mono text-slate-500 bg-slate-50 rounded px-3 py-2 border border-slate-200">
+                    {WORKSPACE_ID}
+                  </p>
+                </div>
+                <div className="flex justify-end">
+                  <Button type="submit" size="sm" className="bg-blue-500 hover:bg-blue-600">
+                    Save workspace
+                  </Button>
+                </div>
+              </form>
             </CardContent>
           </Card>
         </TabsContent>
@@ -126,24 +121,34 @@ export default async function SettingsPage() {
             <CardHeader className="pb-4">
               <CardTitle className="text-base font-semibold">Publishing defaults</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="default-platform">Default platform</Label>
-                <Input
-                  id="default-platform"
-                  defaultValue={defaultPlatform}
-                  placeholder="youtube, tiktok, instagram…"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Default hashtag limit</Label>
-                <Input type="number" defaultValue={10} min={0} max={30} />
-              </div>
-              <div className="flex justify-end">
-                <Button size="sm" className="bg-blue-500 hover:bg-blue-600">
-                  Save publishing
-                </Button>
-              </div>
+            <CardContent>
+              <form action={savePublishingSettings} className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="default-platform">Default platform</Label>
+                  <Input
+                    id="default-platform"
+                    name="default_platform"
+                    defaultValue={defaultPlatform}
+                    placeholder="youtube, tiktok, instagram…"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="hashtag-limit">Default hashtag limit</Label>
+                  <Input
+                    id="hashtag-limit"
+                    name="hashtag_limit"
+                    type="number"
+                    defaultValue={hashtagLimit}
+                    min={0}
+                    max={30}
+                  />
+                </div>
+                <div className="flex justify-end">
+                  <Button type="submit" size="sm" className="bg-blue-500 hover:bg-blue-600">
+                    Save publishing
+                  </Button>
+                </div>
+              </form>
             </CardContent>
           </Card>
         </TabsContent>
@@ -154,35 +159,40 @@ export default async function SettingsPage() {
             <CardHeader className="pb-4">
               <CardTitle className="text-base font-semibold">AI provider</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
-                <p className="text-xs font-semibold text-slate-700">Configured in .env.local</p>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Provider endpoints are set via environment variables.
-                  Edit <code className="font-mono text-slate-700">.env.local</code> to change them.
-                </p>
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="ollama-model">Ollama model</Label>
-                <Input
-                  id="ollama-model"
-                  defaultValue={ollamaModel}
-                  placeholder="llama3, mistral, gemma…"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="whisper-model">Whisper model</Label>
-                <Input
-                  id="whisper-model"
-                  defaultValue={whisperModel}
-                  placeholder="base, small, medium, large"
-                />
-              </div>
-              <div className="flex justify-end">
-                <Button size="sm" className="bg-blue-500 hover:bg-blue-600">
-                  Save AI settings
-                </Button>
-              </div>
+            <CardContent>
+              <form action={saveAISettings} className="space-y-4">
+                <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
+                  <p className="text-xs font-semibold text-slate-700">Endpoints configured in .env.local</p>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Provider base URLs are set via environment variables. Edit{' '}
+                    <code className="font-mono text-slate-700">.env.local</code> to change them.
+                  </p>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="ollama-model">Ollama model</Label>
+                  <Input
+                    id="ollama-model"
+                    name="ollama_model"
+                    defaultValue={ollamaModel}
+                    placeholder="llama3.2, mistral, gemma…"
+                    required
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="whisper-model">Whisper model</Label>
+                  <Input
+                    id="whisper-model"
+                    name="whisper_model"
+                    defaultValue={whisperModel}
+                    placeholder="base, small, medium, large"
+                  />
+                </div>
+                <div className="flex justify-end">
+                  <Button type="submit" size="sm" className="bg-blue-500 hover:bg-blue-600">
+                    Save AI settings
+                  </Button>
+                </div>
+              </form>
             </CardContent>
           </Card>
         </TabsContent>
@@ -197,24 +207,18 @@ export default async function SettingsPage() {
               <div className="flex items-center justify-between rounded-lg border border-slate-200 px-4 py-3">
                 <div>
                   <p className="text-sm font-medium text-slate-800">Clear all logs</p>
-                  <p className="text-xs text-slate-500">
-                    Permanently delete all operational log entries.
-                  </p>
+                  <p className="text-xs text-slate-500">Permanently delete all operational log entries.</p>
                 </div>
-                <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50">
-                  Clear logs
-                </Button>
-              </div>
-              <div className="flex items-center justify-between rounded-lg border border-red-200 bg-red-50/30 px-4 py-3">
-                <div>
-                  <p className="text-sm font-medium text-red-800">Reset workspace data</p>
-                  <p className="text-xs text-red-600">
-                    Permanently delete all content in this workspace. This cannot be undone.
-                  </p>
-                </div>
-                <Button variant="outline" size="sm" className="text-red-700 border-red-300 hover:bg-red-100">
-                  Reset
-                </Button>
+                <form action={clearLogs}>
+                  <Button
+                    type="submit"
+                    variant="outline"
+                    size="sm"
+                    className="text-red-600 border-red-200 hover:bg-red-50"
+                  >
+                    Clear logs
+                  </Button>
+                </form>
               </div>
             </CardContent>
           </Card>

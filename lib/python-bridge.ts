@@ -1,77 +1,81 @@
 import { spawn } from 'child_process'
 import path from 'path'
 
-const PYTHON_PATH = path.join(process.cwd(), 'lib', 'python_env', 'Scripts', 'python.exe')
+function getPythonExecutable(): string {
+  const envPath = process.env.PYTHON_PATH
+  if (envPath) return envPath
+
+  // Check for a local venv (cross-platform)
+  const isWindows = process.platform === 'win32'
+  const venvBin = isWindows ? 'Scripts' : 'bin'
+  const pythonBin = isWindows ? 'python.exe' : 'python3'
+
+  // Prefer local virtualenv, fall back to system python3/python
+  const localVenv = path.join(process.cwd(), 'lib', 'python_env', venvBin, pythonBin)
+  return localVenv
+}
+
+function getPythonFallback(): string {
+  return process.platform === 'win32' ? 'python' : 'python3'
+}
+
 const SCRIPTS_DIR = path.join(process.cwd(), 'lib', 'python')
 
-export async function runScrapeGraph(url: string, prompt: string): Promise<any> {
+async function runPythonScript(scriptName: string, args: string[]): Promise<unknown> {
+  const scriptPath = path.join(SCRIPTS_DIR, scriptName)
+  const pythonExe = getPythonExecutable()
+
   return new Promise((resolve, reject) => {
-    const scriptPath = path.join(SCRIPTS_DIR, 'run_scrapegraph.py')
-    const pythonProcess = spawn(PYTHON_PATH, [scriptPath, url, prompt])
+    let process_ = spawn(pythonExe, [scriptPath, ...args])
 
-    let stdout = ''
-    let stderr = ''
-
-    pythonProcess.stdout.on('data', (data) => {
-      stdout += data.toString()
-    })
-
-    pythonProcess.stderr.on('data', (data) => {
-      stderr += data.toString()
-    })
-
-    pythonProcess.on('close', (code) => {
-      if (code !== 0) {
-        reject(new Error(`Python process exited with code ${code}. Error: ${stderr}`))
+    // If the local venv doesn't exist, fall back to system python
+    process_.on('error', () => {
+      const fallback = getPythonFallback()
+      if (fallback === pythonExe) {
+        reject(new Error(`Python not found. Set PYTHON_PATH env var or create a venv at lib/python_env.`))
         return
       }
-
-      try {
-        const result = JSON.parse(stdout)
-        if (result.error) {
-          reject(new Error(result.error))
-        } else {
-          resolve(result)
-        }
-      } catch (e) {
-        reject(new Error(`Failed to parse python output: ${stdout}`))
-      }
+      process_ = spawn(fallback, [scriptPath, ...args])
+      bindEvents(process_, resolve, reject)
     })
+
+    bindEvents(process_, resolve, reject)
   })
 }
 
-export async function runHermes(query: string): Promise<any> {
-  return new Promise((resolve, reject) => {
-    const scriptPath = path.join(SCRIPTS_DIR, 'run_hermes.py')
-    const pythonProcess = spawn(PYTHON_PATH, [scriptPath, query])
+function bindEvents(
+  proc: ReturnType<typeof spawn>,
+  resolve: (v: unknown) => void,
+  reject: (e: Error) => void
+) {
+  let stdout = ''
+  let stderr = ''
 
-    let stdout = ''
-    let stderr = ''
+  proc.stdout.on('data', (data) => { stdout += data.toString() })
+  proc.stderr.on('data', (data) => { stderr += data.toString() })
 
-    pythonProcess.stdout.on('data', (data) => {
-      stdout += data.toString()
-    })
-
-    pythonProcess.stderr.on('data', (data) => {
-      stderr += data.toString()
-    })
-
-    pythonProcess.on('close', (code) => {
-      if (code !== 0) {
-        reject(new Error(`Python process exited with code ${code}. Error: ${stderr}`))
-        return
+  proc.on('close', (code) => {
+    if (code !== 0) {
+      reject(new Error(`Python process exited with code ${code}. Stderr: ${stderr}`))
+      return
+    }
+    try {
+      const result = JSON.parse(stdout)
+      if (result.error) {
+        reject(new Error(result.error))
+      } else {
+        resolve(result)
       }
-
-      try {
-        const result = JSON.parse(stdout)
-        if (result.error) {
-          reject(new Error(result.error))
-        } else {
-          resolve(result)
-        }
-      } catch (e) {
-        reject(new Error(`Failed to parse python output: ${stdout}`))
-      }
-    })
+    } catch {
+      reject(new Error(`Failed to parse python output: ${stdout}`))
+    }
   })
+}
+
+export async function runScrapeGraph(url: string, prompt: string): Promise<unknown> {
+  return runPythonScript('run_scrapegraph.py', [url, prompt])
+}
+
+export async function runHermes(query: string): Promise<unknown> {
+  return runPythonScript('run_hermes.py', [query])
 }

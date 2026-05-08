@@ -40,18 +40,24 @@ async function checkPythonModule(moduleName: string): Promise<boolean> {
   try {
     const { spawn } = await import('child_process')
     const path = await import('path')
-    const PYTHON_PATH = path.join(process.cwd(), 'lib', 'python_env', 'Scripts', 'python.exe')
 
-    return new Promise((resolve) => {
-      const pyProcess = spawn(PYTHON_PATH, ['-c', `import ${moduleName}`])
-      pyProcess.on('close', (code) => {
-        resolve(code === 0)
+    const isWindows = process.platform === 'win32'
+    const venvBin = isWindows ? 'Scripts' : 'bin'
+    const pythonBin = isWindows ? 'python.exe' : 'python3'
+    const localVenv = path.join(process.cwd(), 'lib', 'python_env', venvBin, pythonBin)
+    const systemPython = isWindows ? 'python' : 'python3'
+
+    const trySpawn = (executable: string) =>
+      new Promise<boolean>((resolve) => {
+        const proc = spawn(executable, ['-c', `import ${moduleName}`])
+        proc.on('close', (code) => resolve(code === 0))
+        proc.on('error', () => resolve(false))
       })
-      pyProcess.on('error', () => {
-        resolve(false)
-      })
-    })
-  } catch (e) {
+
+    const localResult = await trySpawn(localVenv)
+    if (localResult) return true
+    return trySpawn(systemPython)
+  } catch {
     return false
   }
 }
