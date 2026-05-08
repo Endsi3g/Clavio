@@ -253,7 +253,7 @@ export default async function DashboardPage() {
                 <div key={log.id} className="flex items-start gap-3.5 px-5 py-3.5">
                   <div className={`mt-0.5 h-2 w-2 rounded-full shrink-0 ${
                     log.severity === 'error' ? 'bg-red-400' :
-                    log.severity === 'warn' ? 'bg-amber-400' :
+                    log.severity === 'warning' ? 'bg-amber-400' :
                     'bg-emerald-400'
                   }`} />
                   <div className="flex-1 min-w-0">

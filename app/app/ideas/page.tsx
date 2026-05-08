@@ -14,14 +14,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { Badge } from '@/components/ui/badge'
-import { Plus, Sparkles, MoreHorizontal, ExternalLink } from 'lucide-react'
+import { Plus, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
 import type { Idea } from '@/lib/types'
@@ -29,6 +23,7 @@ import { NewIdeaDialog } from './new-idea-dialog'
 import { RealtimeListener, RealtimeStatus } from '@/components/realtime-listener'
 import { IdeasGenerateButton } from './ideas-generate-button'
 import { getDictionary } from '@/lib/i18n/server'
+import { IdeaRowActions } from './idea-row-actions'
 
 export const dynamic = 'force-dynamic'
 
@@ -221,25 +216,7 @@ export default async function IdeasPage({
                         {formatDistanceToNow(new Date(idea.updated_at), { addSuffix: true })}
                       </TableCell>
                       <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button 
-                              className="flex h-7 w-7 items-center justify-center rounded hover:bg-slate-100 transition-colors"
-                              aria-label="More options"
-                            >
-                              <MoreHorizontal className="h-4 w-4 text-slate-400" />
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem asChild>
-                              <Link href={`/app/ideas/${idea.id}`}>
-                                <ExternalLink className="mr-2 h-3.5 w-3.5" />
-                                Open
-                              </Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>Archive</DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        <IdeaRowActions ideaId={idea.id} />
                       </TableCell>
                     </TableRow>
                   ))}

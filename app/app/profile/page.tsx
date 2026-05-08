@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -8,123 +8,138 @@ import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { User2, Mail, Shield, Key, Bell, Loader2, Camera } from 'lucide-react'
+import { User2, Shield, Bell, Loader2, Camera, Save } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { WORKSPACE_ID } from '@/lib/types'
 import { toast } from 'sonner'
-import { cn } from '@/lib/utils'
+
+const SETTING_KEY = 'profile'
+
+interface ProfileData {
+  full_name: string
+  notifications_system: boolean
+  notifications_marketing: boolean
+}
 
 export default function ProfilePage() {
-  const [activeTab, setActiveTab] = useState('general')
   const [loading, setLoading] = useState(false)
+  const [fetching, setFetching] = useState(true)
   const [uploading, setUploading] = useState(false)
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [fullName, setFullName] = useState('Admin User')
+  const [notifSystem, setNotifSystem] = useState(true)
+  const [notifMarketing, setNotifMarketing] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  
-  // Dummy state for demonstration since we are in a simplified workspace
-  const [profile, setProfile] = useState({
-    full_name: 'Admin User',
-    email: 'admin@clavio.com',
-    avatar_url: null as string | null
-  })
-
   const supabase = createClient()
 
-  const handleAvatarClick = () => {
-    fileInputRef.current?.click()
+  useEffect(() => {
+    async function load() {
+      const { data } = await supabase
+        .from('settings')
+        .select('value_json')
+        .eq('workspace_id', WORKSPACE_ID)
+        .eq('key', SETTING_KEY)
+        .maybeSingle()
+
+      if (data?.value_json) {
+        const p = data.value_json as Partial<ProfileData & { avatar_url: string }>
+        if (p.full_name) setFullName(p.full_name)
+        if (p.avatar_url) setAvatarUrl(p.avatar_url)
+        if (typeof p.notifications_system === 'boolean') setNotifSystem(p.notifications_system)
+        if (typeof p.notifications_marketing === 'boolean') setNotifMarketing(p.notifications_marketing)
+      }
+      setFetching(false)
+    }
+    load()
+  }, [])
+
+  async function saveProfile() {
+    setLoading(true)
+    const payload: ProfileData & { avatar_url: string | null } = {
+      full_name: fullName.trim(),
+      avatar_url: avatarUrl,
+      notifications_system: notifSystem,
+      notifications_marketing: notifMarketing,
+    }
+    const { error } = await supabase.from('settings').upsert(
+      { workspace_id: WORKSPACE_ID, key: SETTING_KEY, value_json: payload, updated_at: new Date().toISOString() },
+      { onConflict: 'workspace_id,key' }
+    )
+    setLoading(false)
+    if (error) {
+      toast.error('Failed to save profile: ' + error.message)
+    } else {
+      toast.success('Profile saved')
+    }
   }
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-
+    setUploading(true)
     try {
-      setUploading(true)
-      
-      // 1. Upload to Supabase Storage
       const fileExt = file.name.split('.').pop()
-      const fileName = `${WORKSPACE_ID}/${Math.random()}.${fileExt}`
-      const filePath = `avatars/${fileName}`
-
-      const { error: uploadError, data } = await supabase.storage
-        .from('assets')
-        .upload(filePath, file)
-
+      const filePath = `avatars/${WORKSPACE_ID}/${Date.now()}.${fileExt}`
+      const { error: uploadError } = await supabase.storage.from('assets').upload(filePath, file, { upsert: true })
       if (uploadError) throw uploadError
-
-      // 2. Get Public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('assets')
-        .getPublicUrl(filePath)
-
-      // 3. Update Profile state (and eventually DB)
-      setProfile(prev => ({ ...prev, avatar_url: publicUrl }))
-      
-      toast.success('Avatar mis à jour avec succès')
-    } catch (error: any) {
-      toast.error('Erreur lors de l\'upload: ' + error.message)
+      const { data: { publicUrl } } = supabase.storage.from('assets').getPublicUrl(filePath)
+      setAvatarUrl(publicUrl)
+      toast.success('Avatar uploaded — save to persist')
+    } catch (error: unknown) {
+      toast.error('Upload error: ' + (error instanceof Error ? error.message : String(error)))
     } finally {
       setUploading(false)
     }
   }
 
+  if (fetching) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6 max-w-4xl">
-      {/* Header */}
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">Profile</h1>
-        <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
-          Gérez vos informations personnelles et vos préférences de sécurité.
-        </p>
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Profile</h1>
+        <p className="mt-0.5 text-sm text-slate-500">Manage your workspace identity and notification preferences.</p>
       </div>
 
-      <Tabs defaultValue="general" className="w-full" onValueChange={setActiveTab}>
+      <Tabs defaultValue="general" className="w-full">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          {/* Sidebar Tabs List */}
           <div className="md:col-span-1">
             <TabsList className="flex flex-col h-auto bg-transparent border-none p-0 space-y-1">
-              <TabsTrigger 
-                value="general" 
-                className="w-full justify-start gap-2 px-3 py-2 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-600 dark:data-[state=active]:bg-blue-900/20"
-              >
+              <TabsTrigger value="general" className="w-full justify-start gap-2 px-3 py-2 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-600">
                 <User2 className="h-4 w-4" />
-                Général
+                General
               </TabsTrigger>
-              <TabsTrigger 
-                value="security" 
-                className="w-full justify-start gap-2 px-3 py-2 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-600 dark:data-[state=active]:bg-blue-900/20"
-              >
-                <Shield className="h-4 w-4" />
-                Sécurité
-              </TabsTrigger>
-              <TabsTrigger 
-                value="notifications" 
-                className="w-full justify-start gap-2 px-3 py-2 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-600 dark:data-[state=active]:bg-blue-900/20"
-              >
+              <TabsTrigger value="notifications" className="w-full justify-start gap-2 px-3 py-2 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-600">
                 <Bell className="h-4 w-4" />
                 Notifications
               </TabsTrigger>
             </TabsList>
           </div>
 
-          {/* Tab Content */}
           <div className="md:col-span-3">
             <TabsContent value="general" className="m-0 space-y-6">
-              <Card className="border-slate-200 shadow-sm">
+              <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Informations Personnelles</CardTitle>
-                  <CardDescription>Mettez à jour vos détails personnels.</CardDescription>
+                  <CardTitle className="text-lg">Identity</CardTitle>
+                  <CardDescription>Displayed in the sidebar and logs.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {/* Avatar Upload */}
+                  {/* Avatar */}
                   <div className="flex flex-col gap-4">
-                    <Label>Photo de profil</Label>
+                    <Label>Profile photo</Label>
                     <div className="flex items-center gap-6">
-                      <div 
+                      <div
                         className="relative h-20 w-20 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden cursor-pointer group"
-                        onClick={handleAvatarClick}
+                        onClick={() => fileInputRef.current?.click()}
                       >
-                        {profile.avatar_url ? (
-                          <img src={profile.avatar_url} alt="Avatar" className="h-full w-full object-cover" />
+                        {avatarUrl ? (
+                          <img src={avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
                         ) : (
                           <User2 className="h-10 w-10 text-slate-300" />
                         )}
@@ -133,17 +148,11 @@ export default function ProfilePage() {
                         </div>
                       </div>
                       <div className="space-y-1">
-                        <Button variant="outline" size="sm" onClick={handleAvatarClick} disabled={uploading}>
-                          Choisir une image
+                        <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+                          Choose image
                         </Button>
-                        <p className="text-xs text-slate-500">JPG, PNG ou GIF. Max 2MB.</p>
-                        <input 
-                          type="file" 
-                          ref={fileInputRef} 
-                          onChange={handleFileChange} 
-                          className="hidden" 
-                          accept="image/*"
-                        />
+                        <p className="text-xs text-slate-500">JPG, PNG or GIF. Max 2 MB.</p>
+                        <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
                       </div>
                     </div>
                   </div>
@@ -152,117 +161,61 @@ export default function ProfilePage() {
 
                   <div className="grid gap-4">
                     <div className="grid gap-2">
-                      <Label htmlFor="name">Nom complet</Label>
-                      <Input id="name" defaultValue={profile.full_name} className="max-w-md" />
+                      <Label htmlFor="name">Display name</Label>
+                      <Input
+                        id="name"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        className="max-w-md"
+                      />
                     </div>
                     <div className="grid gap-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input id="email" defaultValue={profile.email} disabled className="max-w-md bg-slate-50" />
+                      <Label>Workspace ID</Label>
+                      <p className="text-xs font-mono text-slate-500 bg-slate-50 rounded px-3 py-2 border border-slate-200 max-w-md">
+                        {WORKSPACE_ID}
+                      </p>
                     </div>
                   </div>
 
                   <div className="pt-2">
-                    <Button className="bg-blue-600 hover:bg-blue-700 text-white gap-2">
-                      Enregistrer les modifications
+                    <Button onClick={saveProfile} disabled={loading} className="bg-blue-600 hover:bg-blue-700 text-white gap-2">
+                      {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                      Save changes
                     </Button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-red-100 bg-red-50/10">
-                <CardHeader>
-                  <CardTitle className="text-red-600 text-lg">Zone de danger</CardTitle>
-                  <CardDescription>Actions irréversibles pour votre compte.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-slate-900">Supprimer le compte</p>
-                      <p className="text-sm text-slate-500">Toutes vos données seront définitivement supprimées.</p>
-                    </div>
-                    <Button variant="destructive" size="sm">Supprimer</Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="security" className="m-0 space-y-6">
-              <Card className="border-slate-200 shadow-sm">
-                <CardHeader>
-                  <CardTitle className="text-lg">Sécurité du compte</CardTitle>
-                  <CardDescription>Gérez votre mot de passe et vos sessions.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="grid gap-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="current-password">Mot de passe actuel</Label>
-                      <Input id="current-password" type="password" className="max-w-md" />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="new-password">Nouveau mot de passe</Label>
-                      <Input id="new-password" type="password" className="max-w-md" />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="confirm-password">Confirmer le mot de passe</Label>
-                      <Input id="confirm-password" type="password" className="max-w-md" />
-                    </div>
-                  </div>
-                  <div className="pt-2">
-                    <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                      Mettre à jour le mot de passe
-                    </Button>
-                  </div>
-
-                  <Separator />
-
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-semibold">Authentification à deux facteurs</h4>
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <p className="text-sm font-medium">Application d'authentification</p>
-                        <p className="text-xs text-slate-500">Utilisez une application comme Google Authenticator.</p>
-                      </div>
-                      <Switch />
-                    </div>
                   </div>
                 </CardContent>
               </Card>
             </TabsContent>
 
             <TabsContent value="notifications" className="m-0 space-y-6">
-              <Card className="border-slate-200 shadow-sm">
+              <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Préférences de notifications</CardTitle>
-                  <CardDescription>Choisissez comment vous souhaitez être informé.</CardDescription>
+                  <CardTitle className="text-lg">Notification preferences</CardTitle>
+                  <CardDescription>Choose how you want to be notified.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <p className="text-sm font-medium text-slate-900">Notifications système</p>
-                        <p className="text-sm text-slate-500">Alertes sur le statut de vos vidéos et rendus.</p>
+                        <p className="text-sm font-medium text-slate-900">System notifications</p>
+                        <p className="text-sm text-slate-500">Alerts about video status and renders.</p>
                       </div>
-                      <Switch defaultChecked />
+                      <Switch checked={notifSystem} onCheckedChange={setNotifSystem} />
                     </div>
                     <Separator />
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <p className="text-sm font-medium text-slate-900">Emails marketing</p>
-                        <p className="text-sm text-slate-500">Recevez des nouvelles sur les fonctionnalités.</p>
+                        <p className="text-sm font-medium text-slate-900">Marketing emails</p>
+                        <p className="text-sm text-slate-500">Receive news about new features.</p>
                       </div>
-                      <Switch />
-                    </div>
-                    <Separator />
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <p className="text-sm font-medium text-slate-900">Alertes de sécurité</p>
-                        <p className="text-sm text-slate-500">Notifications en cas de connexion suspecte.</p>
-                      </div>
-                      <Switch defaultChecked disabled />
+                      <Switch checked={notifMarketing} onCheckedChange={setNotifMarketing} />
                     </div>
                   </div>
                   <div className="pt-2">
-                    <Button variant="outline">Restaurer par défaut</Button>
+                    <Button onClick={saveProfile} disabled={loading} className="bg-blue-600 hover:bg-blue-700 gap-2">
+                      {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                      Save preferences
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -273,4 +226,3 @@ export default function ProfilePage() {
     </div>
   )
 }
-

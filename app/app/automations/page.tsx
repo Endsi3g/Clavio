@@ -13,21 +13,24 @@ import {
 } from '@/components/ui/table'
 import { formatDistanceToNow } from 'date-fns'
 import Link from 'next/link'
+import { checkIntegrationStatus } from '@/lib/integrations-check'
 
 export const dynamic = 'force-dynamic'
 
-// Note: n8n local instance URL from .env.local
 const N8N_URL = process.env.N8N_BASE_URL || 'http://localhost:5678'
 
 export default async function AutomationsPage() {
   const supabase = await createServerClient()
-  
-  const { data: workflowRuns } = await supabase
-    .from('workflow_runs')
-    .select('*')
-    .eq('workspace_id', WORKSPACE_ID)
-    .order('started_at', { ascending: false })
-    .limit(20)
+
+  const [{ data: workflowRuns }, n8nStatus] = await Promise.all([
+    supabase
+      .from('workflow_runs')
+      .select('*')
+      .eq('workspace_id', WORKSPACE_ID)
+      .order('started_at', { ascending: false })
+      .limit(20),
+    checkIntegrationStatus('n8n'),
+  ])
 
   return (
     <div className="space-y-6">
@@ -65,13 +68,20 @@ export default async function AutomationsPage() {
                 <p className="font-medium text-slate-900">n8n Node</p>
                 <p className="text-sm text-slate-500 font-mono">{N8N_URL}</p>
               </div>
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-medium">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                </span>
-                Connected
-              </div>
+              {n8nStatus === 'connected' ? (
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-medium">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                  </span>
+                  Connected
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 text-xs font-medium">
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-slate-400" />
+                  Offline
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
