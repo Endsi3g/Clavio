@@ -1,5 +1,16 @@
 # Clavio Releases
 
+## v0.1.1 (2026-05-08) - Profile & Notifications
+
+### Core Features
+- **Complete Notification System**: Real-time ready notification center with type-specific icons and read status management.
+- **Enhanced Profile Page**: Implemented Security and Notifications tabs for granular user settings.
+- **Avatar Customization**: Users can now upload and change their profile picture directly from the profile page.
+
+### Technical Improvements
+- **Database Schema**: Added `profiles` and `notifications` tables with full RLS policies.
+- **Server Actions**: Implemented backend logic for notification management.
+
 ## v0.1.0 (2026-05-08) - Initial MVP
 
 ### Core Features
