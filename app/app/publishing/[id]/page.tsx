@@ -10,6 +10,7 @@ import Link from 'next/link'
 import { format } from 'date-fns'
 import type { Post, PostMetrics } from '@/lib/types'
 import { PublishPostButton } from '@/components/publish-post-button'
+import { PostPreview } from '@/components/post-preview'
 
 export const dynamic = 'force-dynamic'
 
@@ -111,6 +112,7 @@ export default async function PostDetailPage({
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
+            <PostPreview post={post} />
             {(post.status === 'draft' || post.status === 'scheduled' || post.status === 'failed') && (
               <PublishPostButton postId={post.id} />
             )}

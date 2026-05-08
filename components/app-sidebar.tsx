@@ -18,6 +18,8 @@ import {
   Languages,
   BarChart3,
   Files,
+  Calendar,
+  Layout,
 } from 'lucide-react'
 import { useI18n } from '@/components/i18n-provider'
 import {
@@ -58,6 +60,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         { label: t.sidebar.ideas, href: '/app/ideas', icon: Lightbulb },
         { label: t.sidebar.videos, href: '/app/videos', icon: Video },
         { label: t.sidebar.publishing, href: '/app/publishing', icon: Send },
+        { label: 'Calendar', href: '/app/calendar', icon: Calendar },
         { label: t.sidebar.analytics, href: '/app/analytics', icon: BarChart3 },
       ]
     },
@@ -65,6 +68,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title: t.sidebar.resources,
       items: [
         { label: t.sidebar.assets, href: '/app/assets', icon: Files },
+        { label: 'Templates', href: '/app/templates', icon: Layout },
         { label: t.sidebar.automations, href: '/app/automations', icon: Zap },
         { label: t.sidebar.integrations, href: '/app/integrations', icon: LinkIcon },
       ]

@@ -10,6 +10,8 @@ import {
   Scissors,
   Send,
   BarChart2,
+  Calendar,
+  Layout,
   Folder,
   Zap,
   Plug,
@@ -39,11 +41,13 @@ const primaryNav: NavItem[] = [
   { label: 'Videos', href: '/app/videos', icon: <Video className="h-4 w-4" /> },
   { label: 'Clips', href: '/app/clips', icon: <Scissors className="h-4 w-4" /> },
   { label: 'Publishing', href: '/app/publishing', icon: <Send className="h-4 w-4" /> },
+  { label: 'Calendar', href: '/app/calendar', icon: <Calendar className="h-4 w-4" /> },
   { label: 'Analytics', href: '/app/analytics', icon: <BarChart2 className="h-4 w-4" /> },
 ]
 
 const secondaryNav: NavItem[] = [
   { label: 'Assets', href: '/app/assets', icon: <Folder className="h-4 w-4" /> },
+  { label: 'Templates', href: '/app/templates', icon: <Layout className="h-4 w-4" /> },
   { label: 'Automations', href: '/app/automations', icon: <Zap className="h-4 w-4" /> },
   { label: 'Integrations', href: '/app/integrations', icon: <Plug className="h-4 w-4" /> },
   { label: 'Logs', href: '/app/logs', icon: <ScrollText className="h-4 w-4" /> },
