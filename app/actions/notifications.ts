@@ -1,3 +1,5 @@
+'use server'
+
 import { createServerClient } from '@/lib/supabase/server'
 import { WORKSPACE_ID } from '@/lib/types'
 
