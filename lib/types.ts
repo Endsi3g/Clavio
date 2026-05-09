@@ -112,6 +112,7 @@ export interface Post {
   status: Status
   scheduled_for: string | null
   published_at: string | null
+  published_url: string | null
   created_at: string
   updated_at: string
 }
