@@ -49,12 +49,29 @@ import Link from 'next/link'
 import { VersionSwitcher } from './version-switcher'
 import { Button } from './ui/button'
 import { signOut } from '@/app/actions/auth'
+import { createClient } from '@/lib/supabase/client'
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
   const router = useRouter()
   const { t, locale, setLocale } = useI18n()
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/')
+
+  const [userEmail, setUserEmail] = React.useState<string>('')
+  const [userInitial, setUserInitial] = React.useState<string>('C')
+  React.useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data }) => {
+      const email = data.user?.email ?? ''
+      const name = data.user?.user_metadata?.full_name ?? ''
+      setUserEmail(email)
+      if (name) {
+        setUserInitial(name.charAt(0).toUpperCase())
+      } else if (email) {
+        setUserInitial(email.charAt(0).toUpperCase())
+      }
+    })
+  }, [])
 
   const navCategories = [
     {
@@ -139,12 +156,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton className="h-auto w-full justify-start p-2">
                   <div className="flex items-center gap-3 w-full">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-500 text-white font-bold">
-                      C
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-500 text-white font-bold text-sm">
+                      {userInitial}
                     </div>
                     <div className="flex-1 text-left min-w-0 flex flex-col justify-center">
-                      <span className="truncate text-sm font-semibold leading-tight">Clavio Admin</span>
-                      <span className="truncate text-xs text-slate-500 leading-tight">Synced just now</span>
+                      <span className="truncate text-sm font-semibold leading-tight">
+                        {userEmail ? userEmail.split('@')[0] : 'Workspace'}
+                      </span>
+                      <span className="truncate text-xs text-slate-500 leading-tight">
+                        {userEmail || 'Loading…'}
+                      </span>
                     </div>
                     <ChevronUp className="h-4 w-4 text-slate-400 shrink-0" />
                   </div>

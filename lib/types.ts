@@ -113,6 +113,8 @@ export interface Post {
   scheduled_for: string | null
   published_at: string | null
   published_url: string | null
+  approval_status: 'none' | 'pending_review' | 'changes_requested' | 'approved' | null
+  reviewer_id: string | null
   created_at: string
   updated_at: string
 }

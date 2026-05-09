@@ -312,7 +312,7 @@ export default async function PostDetailPage({
         <div className="min-h-[400px] rounded-xl border border-slate-200 overflow-hidden">
           <ApprovalPanel
             postId={post.id}
-            initialApprovalStatus={((post as unknown) as Record<string, unknown>).approval_status as string ?? 'none'}
+            initialApprovalStatus={post.approval_status ?? 'none'}
             initialComments={commentsData ?? []}
           />
         </div>
