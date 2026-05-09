@@ -15,6 +15,7 @@ const REFRESH_ENDPOINTS: Record<string, string> = {
   instagram: 'https://api.instagram.com/oauth/access_token',
   linkedin: 'https://www.linkedin.com/oauth/v2/accessToken',
   twitter: 'https://api.twitter.com/2/oauth2/token',
+  tiktok: 'https://open.tiktokapis.com/v2/oauth/token/',
 }
 
 export async function refreshIfExpired(integration: Integration): Promise<string> {

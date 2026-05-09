@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
+import { UseTemplateButton } from './use-template-button'
 
 export const dynamic = 'force-dynamic'
 
@@ -185,16 +186,12 @@ function TemplateCard({ template }: { template: Template }) {
       </CardContent>
 
       <CardFooter className="pt-3 border-t border-slate-100">
-        <Button
-          size="sm"
-          variant="outline"
-          className="w-full text-xs h-8 gap-1.5 border-blue-200 text-blue-700 hover:bg-blue-50"
-          asChild
-        >
-          <Link href="/app/ideas">
-            Use template
-          </Link>
-        </Button>
+        <UseTemplateButton
+          title={template.title}
+          description={template.description}
+          format={template.format}
+          platform={template.platform}
+        />
       </CardFooter>
     </Card>
   )

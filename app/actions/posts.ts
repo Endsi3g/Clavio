@@ -48,3 +48,36 @@ export async function publishPostNow(postId: string) {
   revalidatePath('/app/publishing')
   return { success: true }
 }
+
+export async function updatePostStatus(
+  postId: string,
+  status: string
+): Promise<{ success: boolean; error?: string }> {
+  const VALID = ['draft', 'scheduled', 'published', 'failed']
+  if (!VALID.includes(status)) {
+    return { success: false, error: 'Invalid status' }
+  }
+
+  const supabase = await createServerClient()
+  const { error } = await supabase
+    .from('posts')
+    .update({ status, updated_at: new Date().toISOString() })
+    .eq('id', postId)
+    .eq('workspace_id', WORKSPACE_ID)
+
+  if (error) {
+    return { success: false, error: error.message }
+  }
+
+  await supabase.from('logs').insert({
+    workspace_id: WORKSPACE_ID,
+    severity: 'info',
+    source: 'posts',
+    entity_type: 'post',
+    entity_id: postId,
+    message: `Post status changed to ${status}`,
+  })
+
+  revalidatePath('/app/publishing')
+  return { success: true }
+}

@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase/server'
 import { WORKSPACE_ID } from '@/lib/types'
+import { rateLimit } from '@/lib/rate-limit'
 import path from 'path'
 import os from 'os'
 
 export async function POST(request: NextRequest) {
+  const ip = request.headers.get('x-forwarded-for') ?? 'local'
+  const rl = rateLimit(`render:${ip}`, 3, 60_000)
+  if (!rl.allowed) {
+    return NextResponse.json({ error: 'Rate limit exceeded. Max 3 renders per minute.' }, { status: 429 })
+  }
+
   try {
     const { clip_id, composition = 'ClavioClip', brand_color, engine = 'clipify' } = await request.json()
 

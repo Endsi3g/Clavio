@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase/server'
 import { WORKSPACE_ID } from '@/lib/types'
+import { rateLimit } from '@/lib/rate-limit'
 
 const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'http://127.0.0.1:11434'
 const DEFAULT_MODEL = 'mistral'
 
 export async function POST(request: NextRequest) {
+  const ip = request.headers.get('x-forwarded-for') ?? 'local'
+  const rl = rateLimit(`clipify:${ip}`, 10, 60_000)
+  if (!rl.allowed) {
+    return NextResponse.json({ error: 'Rate limit exceeded. Max 10 clipify requests per minute.' }, { status: 429 })
+  }
+
   try {
     const { video_id } = await request.json()
 

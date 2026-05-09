@@ -8,8 +8,15 @@ import { publishToTikTok } from '@/lib/publishers/tiktok'
 import { publishToLinkedIn } from '@/lib/publishers/linkedin'
 import { publishToTwitter } from '@/lib/publishers/twitter'
 import { PublishPostSchema } from '@/lib/schemas/post.schema'
+import { rateLimit } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
+  const ip = request.headers.get('x-forwarded-for') ?? 'local'
+  const rl = rateLimit(`publish:${ip}`, 3, 60_000)
+  if (!rl.allowed) {
+    return NextResponse.json({ error: 'Rate limit exceeded. Max 3 publishes per minute.' }, { status: 429 })
+  }
+
   try {
     const body = await request.json()
     const parsed = PublishPostSchema.safeParse(body)

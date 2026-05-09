@@ -1,8 +1,12 @@
 import { Resend } from 'resend'
 
-export const resend = new Resend(process.env.RESEND_API_KEY)
-
 export const FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? 'hello@clavio.ai'
+
+function getResend(): Resend {
+  const key = process.env.RESEND_API_KEY
+  if (!key) throw new Error('RESEND_API_KEY is not configured')
+  return new Resend(key)
+}
 
 interface SendOptions {
   to: string
@@ -12,6 +16,7 @@ interface SendOptions {
 
 export async function sendEmail({ to, subject, html }: SendOptions): Promise<{ success: boolean; error?: string }> {
   try {
+    const resend = getResend()
     await resend.emails.send({ from: FROM_EMAIL, to, subject, html })
     return { success: true }
   } catch (err) {

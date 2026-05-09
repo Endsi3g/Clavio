@@ -21,6 +21,7 @@ import {
   Calendar,
   Layout,
   LogOut,
+  Users,
 } from 'lucide-react'
 import { useI18n } from '@/components/i18n-provider'
 import {
@@ -79,6 +80,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     {
       title: t.sidebar.system,
       items: [
+        { label: 'Team', href: '/app/team', icon: Users },
         { label: t.sidebar.logs, href: '/app/logs', icon: ScrollText },
         { label: t.sidebar.settings, href: '/app/settings', icon: Settings },
       ]

@@ -14,6 +14,7 @@ import {
 import { formatDistanceToNow } from 'date-fns'
 import Link from 'next/link'
 import { checkIntegrationStatus } from '@/lib/integrations-check'
+import { WorkflowSetupDialog } from './workflow-setup-dialog'
 
 export const dynamic = 'force-dynamic'
 
@@ -98,14 +99,14 @@ export default async function AutomationsPage() {
                 <p className="text-sm font-medium text-slate-900">Auto-publish to Instagram</p>
                 <p className="text-xs text-slate-500">Triggers when a post is marked scheduled.</p>
               </div>
-              <Button size="sm" variant="outline" className="h-7 text-xs">View Setup</Button>
+              <WorkflowSetupDialog workflowId="auto-publish-instagram" />
             </div>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-slate-900">Idea AI Enrichment</p>
                 <p className="text-xs text-slate-500">Uses Ollama to expand short ideas.</p>
               </div>
-              <Button size="sm" variant="outline" className="h-7 text-xs">View Setup</Button>
+              <WorkflowSetupDialog workflowId="idea-ai-enrichment" />
             </div>
           </CardContent>
         </Card>
