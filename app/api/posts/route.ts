@@ -4,7 +4,7 @@ import { WORKSPACE_ID } from '@/lib/types'
 
 export async function POST(request: NextRequest) {
   try {
-    const { title, platform, caption, status = 'draft' } = await request.json()
+    const { title, platform, caption, status = 'draft', idea_id = null, clip_id = null } = await request.json()
 
     if (!title || !platform) {
       return NextResponse.json({ error: 'Title and platform are required' }, { status: 400 })
@@ -20,6 +20,8 @@ export async function POST(request: NextRequest) {
         platform,
         caption,
         status,
+        ...(idea_id ? { idea_id } : {}),
+        ...(clip_id ? { clip_id } : {}),
       })
       .select()
       .single()

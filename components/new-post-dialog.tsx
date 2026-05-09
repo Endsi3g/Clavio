@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Dialog,
@@ -26,14 +26,26 @@ import { Plus, Send } from 'lucide-react'
 interface Props {
   open: boolean
   onOpenChange: (open: boolean) => void
+  defaultTitle?: string
+  defaultPlatform?: string
+  ideaId?: string
 }
 
-export function NewPostDialog({ open, onOpenChange }: Props) {
+export function NewPostDialog({ open, onOpenChange, defaultTitle = '', defaultPlatform = 'instagram', ideaId }: Props) {
   const router = useRouter()
-  const [title, setTitle] = useState('')
-  const [platform, setPlatform] = useState('instagram')
+  const [title, setTitle] = useState(defaultTitle)
+  const [platform, setPlatform] = useState(defaultPlatform)
   const [caption, setCaption] = useState('')
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (open) {
+      setTitle(defaultTitle)
+      setPlatform(defaultPlatform || 'instagram')
+      setCaption('')
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
 
   async function handleCreate() {
     if (!title) return
@@ -43,11 +55,12 @@ export function NewPostDialog({ open, onOpenChange }: Props) {
       const res = await fetch('/api/posts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          title, 
-          platform, 
+        body: JSON.stringify({
+          title,
+          platform,
           caption,
-          status: 'draft'
+          status: 'draft',
+          ...(ideaId ? { idea_id: ideaId } : {}),
         }),
       })
 

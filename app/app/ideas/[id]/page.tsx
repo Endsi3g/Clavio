@@ -34,6 +34,7 @@ type PostSummary = {
 import { IdeaEditor } from './idea-editor'
 import { VariantCard } from './variant-card'
 import { ScriptStudio } from './script-studio'
+import { CreatePostFromIdeaButton } from './create-post-button'
 
 export const dynamic = 'force-dynamic'
 
@@ -163,10 +164,17 @@ export default async function IdeaDetailPage({
             </TabsContent>
 
             <TabsContent value="posts" className="mt-4">
+              <div className="flex justify-end mb-3">
+                <CreatePostFromIdeaButton
+                  ideaId={idea.id}
+                  ideaTitle={idea.title}
+                  ideaPlatform={idea.platform}
+                />
+              </div>
               {posts.length === 0 ? (
                 <EmptyState
                   title="No posts linked"
-                  description="Schedule this idea as a post to see it here."
+                  description="Click «Create post» to turn this idea into a draft post."
                 />
               ) : (
                 <div className="space-y-2">
