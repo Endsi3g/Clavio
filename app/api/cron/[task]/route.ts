@@ -8,6 +8,11 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ task: string }> }
 ) {
+  const cronSecret = request.headers.get('authorization')?.replace('Bearer ', '')
+  if (process.env.CRON_SECRET && cronSecret !== process.env.CRON_SECRET) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   const { task } = await params
   const supabase = await createServerClient()
 

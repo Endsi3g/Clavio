@@ -70,20 +70,20 @@ async function handleN8nCallback(
     return NextResponse.json({ error: 'workflow_run_id and post_id required' }, { status: 400 })
   }
 
-  // Update workflow run
+  // Update workflow run (workspace-scoped)
   await supabase.from('workflow_runs').update({
     status: status === 'success' ? 'published' : 'failed',
     output_json: { platform_post_id, published_at },
     error_message: error_message ?? null,
     finished_at: new Date().toISOString(),
-  }).eq('id', workflow_run_id)
+  }).eq('id', workflow_run_id).eq('workspace_id', WORKSPACE_ID)
 
   if (status === 'success') {
-    // Update post status
+    // Update post status (workspace-scoped)
     await supabase.from('posts').update({
       status: 'published',
       published_at: published_at ?? new Date().toISOString(),
-    }).eq('id', post_id)
+    }).eq('id', post_id).eq('workspace_id', WORKSPACE_ID)
 
     // Insert initial metrics if provided
     if (metrics) {
@@ -108,7 +108,7 @@ async function handleN8nCallback(
       payload_json: { platform_post_id, metrics },
     })
   } else {
-    await supabase.from('posts').update({ status: 'failed' }).eq('id', post_id)
+    await supabase.from('posts').update({ status: 'failed' }).eq('id', post_id).eq('workspace_id', WORKSPACE_ID)
 
     await supabase.from('logs').insert({
       workspace_id: WORKSPACE_ID,

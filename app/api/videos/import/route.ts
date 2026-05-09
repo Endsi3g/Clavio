@@ -15,6 +15,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'URL is required' }, { status: 400 })
     }
 
+    try {
+      new URL(url)
+    } catch {
+      return NextResponse.json({ error: 'Invalid URL' }, { status: 400 })
+    }
+
     const supabase = await createServerClient()
 
     // 1. Request video from Cobalt
@@ -98,16 +104,17 @@ export async function POST(req: Request) {
     // 5. Create a log entry
     await supabase.from('logs').insert({
       workspace_id: WORKSPACE_ID,
-      level: 'info',
-      event: 'video_imported',
+      severity: 'info',
+      source: 'videos/import',
       message: `Video imported successfully from ${url}`,
       entity_id: videoRecord.id,
       entity_type: 'videos'
     })
 
     return NextResponse.json({ success: true, video: videoRecord })
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Internal Server Error'
     console.error('[Video Import API Error]', error)
-    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 })
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

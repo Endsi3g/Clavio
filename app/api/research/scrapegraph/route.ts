@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createServerClient } from '@/lib/supabase/server'
+import { WORKSPACE_ID } from '@/lib/types'
 import { runScrapeGraph } from '@/lib/python-bridge'
 
 export async function POST(req: NextRequest) {
@@ -10,9 +12,20 @@ export async function POST(req: NextRequest) {
     }
 
     const result = await runScrapeGraph(url, prompt)
+
+    const supabase = await createServerClient()
+    await supabase.from('logs').insert({
+      workspace_id: WORKSPACE_ID,
+      severity: 'info',
+      source: 'research/scrapegraph',
+      message: `ScrapeGraph research completed for ${url}`,
+      payload_json: { url, prompt },
+    })
+
     return NextResponse.json({ result })
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Internal Server Error'
     console.error('[ScrapeGraph API Error]', err)
-    return NextResponse.json({ error: err.message || 'Internal Server Error' }, { status: 500 })
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

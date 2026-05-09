@@ -30,6 +30,7 @@ export interface Idea {
   source_type: string | null
   source_ref: string | null
   prompt: string | null
+  script: string | null
   created_at: string
   updated_at: string
 }
