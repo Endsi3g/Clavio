@@ -20,6 +20,7 @@ import {
   Files,
   Calendar,
   Layout,
+  LogOut,
 } from 'lucide-react'
 import { useI18n } from '@/components/i18n-provider'
 import {
@@ -39,12 +40,14 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { VersionSwitcher } from './version-switcher'
 import { Button } from './ui/button'
+import { signOut } from '@/app/actions/auth'
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
@@ -157,8 +160,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   <Settings className="mr-2 h-4 w-4" />
                   <span>Preferences</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <span>Sign out</span>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <form action={signOut} className="w-full">
+                    <button type="submit" className="flex w-full items-center gap-2 text-red-600">
+                      <LogOut className="h-4 w-4" />
+                      Sign out
+                    </button>
+                  </form>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

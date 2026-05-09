@@ -58,6 +58,7 @@ export default async function DashboardPage() {
   const supabase = await createServerClient()
   const t = await getDictionary()
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let ideas: any[] = [], videos: any[] = [], posts: any[] = [], workflows: any[] = [], logs: any[] = [], metrics: any[] = []
 
   try {
