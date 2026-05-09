@@ -1,20 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase/server'
 import { WORKSPACE_ID } from '@/lib/types'
-
-const N8N_BASE_URL = process.env.N8N_BASE_URL || 'http://localhost:5678'
-const N8N_API_KEY = process.env.N8N_API_KEY || ''
+import { refreshIfExpired } from '@/lib/token-refresh'
+import { publishToYouTube } from '@/lib/publishers/youtube'
+import { publishToInstagram } from '@/lib/publishers/instagram'
+import { publishToTikTok } from '@/lib/publishers/tiktok'
+import { publishToLinkedIn } from '@/lib/publishers/linkedin'
+import { publishToTwitter } from '@/lib/publishers/twitter'
+import { PublishPostSchema } from '@/lib/schemas/post.schema'
+import { rateLimit } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
-  try {
-    const { post_id } = await request.json()
+  const ip = request.headers.get('x-forwarded-for') ?? 'local'
+  const rl = rateLimit(`publish:${ip}`, 3, 60_000)
+  if (!rl.allowed) {
+    return NextResponse.json({ error: 'Rate limit exceeded. Max 3 publishes per minute.' }, { status: 429 })
+  }
 
-    if (!post_id) {
-      return NextResponse.json({ error: 'post_id is required' }, { status: 400 })
+  try {
+    const body = await request.json()
+    const parsed = PublishPostSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Invalid input' }, { status: 400 })
     }
+    const { post_id } = parsed.data
 
     const supabase = await createServerClient()
 
+    // Fetch post
     const { data: post, error: postError } = await supabase
       .from('posts')
       .select('*')
@@ -22,16 +35,22 @@ export async function POST(request: NextRequest) {
       .eq('workspace_id', WORKSPACE_ID)
       .single()
 
-    if (postError || !post) {
-      return NextResponse.json({ error: 'Post not found' }, { status: 404 })
-    }
-
+    if (postError || !post) return NextResponse.json({ error: 'Post not found' }, { status: 404 })
     if (!['draft', 'scheduled', 'failed'].includes(post.status)) {
-      return NextResponse.json({ error: `Post cannot be published from status: ${post.status}` }, { status: 400 })
+      return NextResponse.json({ error: `Cannot publish from status: ${post.status}` }, { status: 400 })
     }
 
-    // Create a workflow_run record
-    const { data: workflowRun, error: wrError } = await supabase
+    // Fetch platform integration
+    const { data: integration } = await supabase
+      .from('integrations')
+      .select('*')
+      .eq('workspace_id', WORKSPACE_ID)
+      .eq('provider', post.platform)
+      .eq('status', 'connected')
+      .maybeSingle()
+
+    // Log workflow start
+    const { data: wfRun } = await supabase
       .from('workflow_runs')
       .insert({
         workspace_id: WORKSPACE_ID,
@@ -39,92 +58,121 @@ export async function POST(request: NextRequest) {
         entity_type: 'post',
         entity_id: post_id,
         status: 'processing',
-        input_json: {
-          post_id,
-          platform: post.platform,
-          title: post.title,
-          caption: post.caption,
-          hashtags: post.hashtags,
-          media_url: post.media_url,
-          scheduled_for: post.scheduled_for,
-        },
         started_at: new Date().toISOString(),
+        input_json: { post_id, platform: post.platform },
       })
       .select()
       .single()
 
-    if (wrError) {
-      return NextResponse.json({ error: 'Failed to create workflow run' }, { status: 500 })
-    }
-
-    // Update post status
     await supabase.from('posts').update({ status: 'processing' }).eq('id', post_id)
 
-    await supabase.from('logs').insert({
-      workspace_id: WORKSPACE_ID,
-      severity: 'info',
-      source: 'posts/publish',
-      entity_type: 'post',
-      entity_id: post_id,
-      message: `Publish triggered via n8n for ${post.platform}: "${post.title}"`,
-      payload_json: { workflow_run_id: workflowRun.id },
-    })
-
-    // Trigger n8n webhook
-    const webhookUrl = `${N8N_BASE_URL}/webhook/clavio-publish`
-    const webhookPayload = {
-      workflow_run_id: workflowRun.id,
-      post_id,
-      platform: post.platform,
-      title: post.title,
-      caption: post.caption,
-      hashtags: post.hashtags,
-      media_url: post.media_url,
-      callback_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/webhooks/n8n`,
-    }
-
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    }
-    if (N8N_API_KEY) {
-      headers['X-N8N-API-KEY'] = N8N_API_KEY
-    }
-
     try {
-      const n8nRes = await fetch(webhookUrl, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(webhookPayload),
-        signal: AbortSignal.timeout(10000),
-      })
+      let result: { url?: string; videoId?: string; postId?: string; tweetId?: string; shareUrl?: string } = {}
 
-      if (!n8nRes.ok) {
-        const errText = await n8nRes.text()
-        await supabase.from('logs').insert({
-          workspace_id: WORKSPACE_ID,
-          severity: 'warning',
-          source: 'posts/publish',
-          entity_type: 'post',
-          entity_id: post_id,
-          message: `n8n webhook responded with ${n8nRes.status}: ${errText}`,
-        })
+      if (!integration) {
+        throw new Error(`No connected integration for platform: ${post.platform}. Connect it in Integrations.`)
       }
-    } catch (n8nErr) {
-      // n8n might not be running yet — log but don't fail
+
+      const accessToken = await refreshIfExpired(integration)
+
+      switch (post.platform) {
+        case 'youtube':
+          result = await publishToYouTube(accessToken, {
+            title: post.title,
+            description: post.caption ?? '',
+            mediaUrl: post.media_url ?? '',
+            tags: post.hashtags?.split(/\s+/).filter(Boolean),
+          })
+          break
+
+        case 'instagram': {
+          const igAccountId = integration.platform_user_id ?? ''
+          result = await publishToInstagram(accessToken, {
+            caption: `${post.caption ?? ''}\n\n${post.hashtags ?? ''}`.trim(),
+            mediaUrl: post.media_url ?? '',
+            igAccountId,
+          })
+          break
+        }
+
+        case 'tiktok':
+          result = await publishToTikTok(accessToken, {
+            title: post.title,
+            description: post.caption ?? '',
+            mediaUrl: post.media_url ?? '',
+          })
+          break
+
+        case 'linkedin': {
+          const authorUrn = `urn:li:person:${integration.platform_user_id}`
+          result = await publishToLinkedIn(accessToken, {
+            text: `${post.caption ?? post.title}\n\n${post.hashtags ?? ''}`.trim(),
+            mediaUrl: post.media_url ?? undefined,
+            authorUrn,
+          })
+          break
+        }
+
+        case 'twitter':
+          result = await publishToTwitter(accessToken, {
+            text: `${post.caption ?? post.title} ${post.hashtags ?? ''}`.trim().slice(0, 280),
+            mediaUrl: post.media_url ?? undefined,
+          })
+          break
+
+        default:
+          throw new Error(`Unsupported platform: ${post.platform}`)
+      }
+
+      const publishedUrl = result.url ?? result.shareUrl ?? null
+
+      // Mark post published
+      await supabase.from('posts').update({
+        status: 'published',
+        published_at: new Date().toISOString(),
+        published_url: publishedUrl,
+      }).eq('id', post_id)
+
+      // Complete workflow run
+      await supabase.from('workflow_runs').update({
+        status: 'completed',
+        finished_at: new Date().toISOString(),
+        output_json: result,
+      }).eq('id', wfRun?.id)
+
       await supabase.from('logs').insert({
         workspace_id: WORKSPACE_ID,
-        severity: 'warning',
+        severity: 'info',
         source: 'posts/publish',
         entity_type: 'post',
         entity_id: post_id,
-        message: `n8n unreachable at ${webhookUrl}. Workflow queued locally.`,
-        payload_json: { error: n8nErr instanceof Error ? n8nErr.message : String(n8nErr) },
+        message: `Published to ${post.platform}: "${post.title}"`,
+        payload_json: { url: publishedUrl },
       })
-    }
 
-    return NextResponse.json({ data: workflowRun })
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Internal server error'
-    return NextResponse.json({ error: message }, { status: 500 })
+      return NextResponse.json({ success: true, url: publishedUrl })
+    } catch (publishErr) {
+      const msg = publishErr instanceof Error ? publishErr.message : String(publishErr)
+
+      await supabase.from('posts').update({ status: 'failed' }).eq('id', post_id)
+      await supabase.from('workflow_runs').update({
+        status: 'failed',
+        finished_at: new Date().toISOString(),
+        error_message: msg,
+      }).eq('id', wfRun?.id)
+
+      await supabase.from('logs').insert({
+        workspace_id: WORKSPACE_ID,
+        severity: 'error',
+        source: 'posts/publish',
+        entity_type: 'post',
+        entity_id: post_id,
+        message: `Publish failed for ${post.platform}: ${msg}`,
+      })
+
+      return NextResponse.json({ error: msg }, { status: 500 })
+    }
+  } catch (err) {
+    return NextResponse.json({ error: err instanceof Error ? err.message : 'Internal error' }, { status: 500 })
   }
 }

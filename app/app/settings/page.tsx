@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Building2, Send, Cpu, Wrench } from 'lucide-react'
+import { Building2, Send, Cpu, Wrench, Palette, CreditCard } from 'lucide-react'
+import Link from 'next/link'
 import { getDictionary } from '@/lib/i18n/server'
 import {
   saveWorkspaceSettings,
@@ -89,6 +90,17 @@ export default async function SettingsPage({
             </a>
           </TabsTrigger>
         </TabsList>
+
+        <div className="flex items-center gap-2 mt-2">
+          <Link href="/app/settings/brand-kit" className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:border-slate-300 hover:bg-slate-50 transition-colors">
+            <Palette className="h-3.5 w-3.5" />
+            Brand Kit
+          </Link>
+          <Link href="/app/settings/billing" className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:border-slate-300 hover:bg-slate-50 transition-colors">
+            <CreditCard className="h-3.5 w-3.5" />
+            Billing
+          </Link>
+        </div>
 
         {/* Workspace tab */}
         <TabsContent value="workspace" className="mt-5 space-y-5">

@@ -128,9 +128,12 @@ export function NotificationCenter() {
         {notifications.length > 0 && (
           <>
             <DropdownMenuSeparator className="m-0" />
-            <button className="w-full py-2.5 text-center text-xs font-medium text-blue-600 hover:bg-slate-50 transition-colors">
-              Voir tout
-            </button>
+            <a
+              href="/app/notifications"
+              className="block w-full py-2.5 text-center text-xs font-medium text-blue-600 hover:bg-slate-50 transition-colors"
+            >
+              View all notifications
+            </a>
           </>
         )}
       </DropdownMenuContent>

@@ -7,6 +7,7 @@ import type { Post } from '@/lib/types'
 import { NewPostButton } from './new-post-button'
 import { PublishCalendar } from './publish-calendar'
 import { PostTableClient } from './post-table-client'
+import { PublishingKanban } from './publishing-kanban'
 import { getDictionary } from '@/lib/i18n/server'
 
 export const dynamic = 'force-dynamic'
@@ -14,9 +15,10 @@ export const dynamic = 'force-dynamic'
 export default async function PublishingPage({
   searchParams,
 }: {
-  searchParams: Promise<Record<string, string>>
+  searchParams: Promise<Record<string, string | string[]>>
 }) {
   const params = await searchParams
+  const view = typeof params.view === 'string' ? params.view : 'list'
   const t = await getDictionary()
   const supabase = await createServerClient()
 
@@ -73,12 +75,25 @@ export default async function PublishingPage({
         </div>
         <div className="flex items-center gap-2">
           <PublishCalendar posts={allPosts} />
+          <a
+            href={`/app/publishing?view=${view === 'kanban' ? 'list' : 'kanban'}`}
+            className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+          >
+            {view === 'kanban' ? (
+              <><svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg> List</>
+            ) : (
+              <><svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" /></svg> Kanban</>
+            )}
+          </a>
           <NewPostButton />
         </div>
       </div>
 
-      {/* Tabs */}
-      <Tabs defaultValue="scheduled">
+      {/* Kanban view */}
+      {view === 'kanban' && <PublishingKanban initialPosts={allPosts} />}
+
+      {/* List view via Tabs */}
+      {view !== 'kanban' && <Tabs defaultValue="scheduled">
         <TabsList className="bg-slate-100">
           <TabsTrigger value="scheduled">
             {t.publishing.tabs.scheduled}
@@ -121,7 +136,7 @@ export default async function PublishingPage({
             </Card>
           </TabsContent>
         ))}
-      </Tabs>
+      </Tabs>}
     </div>
   )
 }

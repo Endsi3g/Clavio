@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase/server'
 import { WORKSPACE_ID } from '@/lib/types'
+import { rateLimit } from '@/lib/rate-limit'
 
 const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'http://localhost:11434'
 const DEFAULT_MODEL = 'llama3.2'
 
 export async function POST(request: NextRequest) {
+  const ip = request.headers.get('x-forwarded-for') ?? 'local'
+  const rl = rateLimit(`ideas-generate:${ip}`, 10, 60_000)
+  if (!rl.allowed) {
+    return NextResponse.json({ error: 'Rate limit exceeded. Max 10 generations per minute.' }, { status: 429 })
+  }
+
   try {
     const { subject, platform, format, count = 5 } = await request.json()
 

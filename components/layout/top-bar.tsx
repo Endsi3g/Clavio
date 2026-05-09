@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation'
 import { User, Settings, LogOut } from 'lucide-react'
+import { signOut } from '@/app/actions/auth'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -136,9 +137,13 @@ export function TopBar({ notificationCount = 0 }: TopBarProps) {
               <span>Settings</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-red-600 dark:text-red-400">
-              <LogOut className="mr-2 h-4 w-4" />
-              <span>Log out</span>
+            <DropdownMenuItem asChild>
+              <form action={signOut} className="w-full">
+                <button type="submit" className="flex w-full items-center text-red-600 dark:text-red-400">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Log out
+                </button>
+              </form>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

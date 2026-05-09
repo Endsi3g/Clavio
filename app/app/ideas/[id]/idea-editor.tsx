@@ -13,7 +13,7 @@ export function IdeaEditor({ idea }: { idea: Idea }) {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
   const [expanding, setExpanding] = useState(false)
-  const [content, setContent] = useState((idea as Record<string, unknown>).script as string ?? '')
+  const [content, setContent] = useState((idea as unknown as Record<string, unknown>).script as string ?? '')
   const [researchOpen, setResearchOpen] = useState(false)
 
   async function handleSave() {

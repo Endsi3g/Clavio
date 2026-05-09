@@ -11,6 +11,7 @@ import { format } from 'date-fns'
 import type { Post, PostMetrics } from '@/lib/types'
 import { PublishPostButton } from '@/components/publish-post-button'
 import { PostPreview } from '@/components/post-preview'
+import { ApprovalPanel } from './approval-panel'
 
 export const dynamic = 'force-dynamic'
 
@@ -50,6 +51,12 @@ export default async function PostDetailPage({
   const post: Post = postResult.data
   const metrics: PostMetrics | null = metricsResult.data
   const workflowRuns = workflowResult.data ?? []
+
+  const { data: commentsData } = await supabase
+    .from('post_comments')
+    .select('id, body, author_name, created_at')
+    .eq('post_id', id)
+    .order('created_at', { ascending: true })
 
   type StepStatus = 'success' | 'failed' | 'processing' | 'pending'
   const toStepStatus = (s: string): StepStatus => {
@@ -120,10 +127,10 @@ export default async function PostDetailPage({
         </div>
       </div>
 
-      {/* 2-col layout */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      {/* 3-col layout with approval panel */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
         {/* Left: content */}
-        <div className="lg:col-span-2 space-y-4">
+        <div className="lg:col-span-2 space-y-4 lg:col-start-1">
           {/* Caption */}
           <Card>
             <CardHeader className="pb-3">
@@ -214,7 +221,7 @@ export default async function PostDetailPage({
           <WorkflowTimeline steps={timelineSteps} />
         </div>
 
-        {/* Right: metadata */}
+        {/* Middle: metadata */}
         <div className="space-y-4">
           <Card>
             <CardHeader className="pb-3">
@@ -279,6 +286,15 @@ export default async function PostDetailPage({
               </CardContent>
             </Card>
           )}
+        </div>
+
+        {/* Right: approval panel */}
+        <div className="min-h-[400px] rounded-xl border border-slate-200 overflow-hidden">
+          <ApprovalPanel
+            postId={post.id}
+            initialApprovalStatus={((post as unknown) as Record<string, unknown>).approval_status as string ?? 'none'}
+            initialComments={commentsData ?? []}
+          />
         </div>
       </div>
     </div>
