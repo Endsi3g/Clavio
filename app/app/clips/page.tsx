@@ -6,6 +6,7 @@ import { StatusBadge } from '@/components/status-badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { FilterBar } from '@/components/filter-bar'
 import { ClipRowActions } from './clip-row-actions'
+import { VideoPreviewCell } from '@/components/video-preview-cell'
 import Link from 'next/link'
 import {
   Table,
@@ -35,7 +36,7 @@ type ClipWithVideo = {
   status: string
   created_at: string
   video_id: string
-  videos: { title: string } | null
+  videos: { title: string; source_url: string | null } | null
 }
 
 export default async function ClipsPage({
@@ -48,7 +49,7 @@ export default async function ClipsPage({
 
   let query = supabase
     .from('clips')
-    .select('*, videos(title)')
+    .select('*, videos(title, source_url)')
     .eq('workspace_id', WORKSPACE_ID)
     .order('created_at', { ascending: false })
 
@@ -124,7 +125,8 @@ export default async function ClipsPage({
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
-                  <TableHead className="w-[30%]">Title</TableHead>
+                  <TableHead className="w-[88px]" />
+                  <TableHead className="w-[28%]">Title</TableHead>
                   <TableHead>Source video</TableHead>
                   <TableHead>Duration</TableHead>
                   <TableHead>Aspect</TableHead>
@@ -135,6 +137,14 @@ export default async function ClipsPage({
               <TableBody>
                 {clips.map((clip) => (
                   <TableRow key={clip.id}>
+                    <TableCell className="py-2">
+                      <VideoPreviewCell
+                        videoId={clip.video_id}
+                        title={clip.title}
+                        sourceUrl={clip.videos?.source_url ?? null}
+                        durationSeconds={Math.round((clip.end_ms - clip.start_ms) / 1000)}
+                      />
+                    </TableCell>
                     <TableCell>
                       <p className="font-medium text-slate-900 line-clamp-1">{clip.title}</p>
                       {clip.caption && (

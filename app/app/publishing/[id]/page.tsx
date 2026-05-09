@@ -5,13 +5,14 @@ import { StatusBadge } from '@/components/status-badge'
 import { WorkflowTimeline } from '@/components/workflow-timeline'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
-import { ArrowLeft, Globe, Clock, Calendar, BarChart2, Link2 } from 'lucide-react'
+import { ArrowLeft, Globe, Clock, Calendar, BarChart2, Link2, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
 import { format } from 'date-fns'
 import type { Post, PostMetrics } from '@/lib/types'
 import { PublishPostButton } from '@/components/publish-post-button'
 import { PostPreview } from '@/components/post-preview'
 import { ApprovalPanel } from './approval-panel'
+import { PostEditDelete } from './post-edit-delete'
 
 export const dynamic = 'force-dynamic'
 
@@ -118,7 +119,8 @@ export default async function PostDetailPage({
               <StatusBadge status={post.status} />
             </div>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2 shrink-0 flex-wrap">
+            <PostEditDelete post={post} />
             <PostPreview post={post} />
             {(post.status === 'draft' || post.status === 'scheduled' || post.status === 'failed') && (
               <PublishPostButton postId={post.id} />
@@ -268,6 +270,24 @@ export default async function PostDetailPage({
                   {format(new Date(post.created_at), 'MMM d, yyyy')}
                 </span>
               </div>
+              {post.published_url && (
+                <>
+                  <Separator />
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-slate-500 flex items-center gap-1">
+                      <ExternalLink className="h-3 w-3" /> Live URL
+                    </span>
+                    <a
+                      href={post.published_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-500 hover:text-blue-700 font-mono truncate max-w-[120px]"
+                    >
+                      View post →
+                    </a>
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
 
@@ -292,7 +312,7 @@ export default async function PostDetailPage({
         <div className="min-h-[400px] rounded-xl border border-slate-200 overflow-hidden">
           <ApprovalPanel
             postId={post.id}
-            initialApprovalStatus={((post as unknown) as Record<string, unknown>).approval_status as string ?? 'none'}
+            initialApprovalStatus={post.approval_status ?? 'none'}
             initialComments={commentsData ?? []}
           />
         </div>

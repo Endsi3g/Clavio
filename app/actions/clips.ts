@@ -6,14 +6,48 @@ import { revalidatePath } from 'next/cache'
 
 export async function approveClip(clipId: string) {
   const supabase = await createServerClient()
-  await supabase.from('clips').update({ status: 'review' }).eq('id', clipId)
+  const { error } = await supabase
+    .from('clips')
+    .update({ status: 'review' })
+    .eq('id', clipId)
+    .eq('workspace_id', WORKSPACE_ID)
+
+  if (error) {
+    await supabase.from('logs').insert({
+      workspace_id: WORKSPACE_ID,
+      severity: 'error',
+      source: 'clips',
+      entity_type: 'clip',
+      entity_id: clipId,
+      message: `Failed to approve clip: ${error.message}`,
+    })
+    return { success: false, error: error.message }
+  }
+
   revalidatePath('/app/clips')
   return { success: true }
 }
 
 export async function rejectClip(clipId: string) {
   const supabase = await createServerClient()
-  await supabase.from('clips').update({ status: 'archived' }).eq('id', clipId)
+  const { error } = await supabase
+    .from('clips')
+    .update({ status: 'archived' })
+    .eq('id', clipId)
+    .eq('workspace_id', WORKSPACE_ID)
+
+  if (error) {
+    await supabase.from('logs').insert({
+      workspace_id: WORKSPACE_ID,
+      severity: 'error',
+      source: 'clips',
+      entity_type: 'clip',
+      entity_id: clipId,
+      message: `Failed to reject clip: ${error.message}`,
+    })
+    return { success: false, error: error.message }
+  }
+
   revalidatePath('/app/clips')
   return { success: true }
 }

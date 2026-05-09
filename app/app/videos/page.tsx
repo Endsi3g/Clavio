@@ -21,6 +21,7 @@ import { RealtimeListener, RealtimeStatus } from '@/components/realtime-listener
 import { ImportVideoDialog } from '@/components/import-video-dialog'
 import { VideosUploadButton } from './videos-upload-button'
 import { VideoRowActions } from './video-row-actions'
+import { VideoPreviewCell } from '@/components/video-preview-cell'
 import { getDictionary } from '@/lib/i18n/server'
 
 export const dynamic = 'force-dynamic'
@@ -107,7 +108,8 @@ export default async function VideosPage() {
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
-                  <TableHead className="w-[30%]">Title</TableHead>
+                  <TableHead className="w-[88px]" />
+                  <TableHead className="w-[28%]">Title</TableHead>
                   <TableHead>Duration</TableHead>
                   <TableHead>Transcription</TableHead>
                   <TableHead>Processing</TableHead>
@@ -120,6 +122,14 @@ export default async function VideosPage() {
               <TableBody>
                 {videos.map((video) => (
                   <TableRow key={video.id}>
+                    <TableCell className="py-2">
+                      <VideoPreviewCell
+                        videoId={video.id}
+                        title={video.title}
+                        sourceUrl={video.source_url}
+                        durationSeconds={video.duration_seconds}
+                      />
+                    </TableCell>
                     <TableCell>
                       <Link
                         href={`/app/videos/${video.id}`}
