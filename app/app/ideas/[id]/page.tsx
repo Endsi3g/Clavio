@@ -33,6 +33,7 @@ type PostSummary = {
 }
 import { IdeaEditor } from './idea-editor'
 import { VariantCard } from './variant-card'
+import { ScriptStudio } from './script-studio'
 
 export const dynamic = 'force-dynamic'
 
@@ -126,6 +127,7 @@ export default async function IdeaDetailPage({
                   </span>
                 )}
               </TabsTrigger>
+              <TabsTrigger value="script">Script Studio</TabsTrigger>
             </TabsList>
 
             <TabsContent value="content" className="mt-4">
@@ -151,6 +153,13 @@ export default async function IdeaDetailPage({
                   ))}
                 </div>
               )}
+            </TabsContent>
+
+            <TabsContent value="script" className="mt-4">
+              <ScriptStudio
+                initialScript={idea.prompt ?? ''}
+                ideaTitle={idea.title}
+              />
             </TabsContent>
 
             <TabsContent value="posts" className="mt-4">

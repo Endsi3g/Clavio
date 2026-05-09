@@ -1,262 +1,150 @@
 import { createServerClient } from '@/lib/supabase/server'
 import { WORKSPACE_ID } from '@/lib/types'
-import { EmptyState } from '@/components/empty-state'
-import { ErrorState } from '@/components/error-state'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
-import {
-  CheckCircle2,
-  XCircle,
-  AlertCircle,
-  RefreshCw,
-  Database,
-  Cpu,
-  Mic,
-  Film,
-  Globe,
-  Webhook,
-  Plus,
-} from 'lucide-react'
-import { format, formatDistanceToNow } from 'date-fns'
-import type { Integration } from '@/lib/types'
-import { checkIntegrationStatus } from '@/lib/integrations-check'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { CheckCircle2, XCircle, AlertCircle, ExternalLink } from 'lucide-react'
+import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
 
-const PROVIDER_CONFIG: Record<
-  string,
-  { label: string; icon: React.ReactNode; description: string }
-> = {
-  supabase: {
-    label: 'Supabase',
-    icon: <Database className="h-5 w-5" />,
-    description: 'Postgres database and file storage',
-  },
-  ollama: {
-    label: 'Ollama',
-    icon: <Cpu className="h-5 w-5" />,
-    description: 'Local AI model serving',
-  },
-  whisper: {
-    label: 'Whisper',
-    icon: <Mic className="h-5 w-5" />,
-    description: 'Local speech-to-text transcription',
-  },
-  remotion: {
-    label: 'Remotion',
-    icon: <Film className="h-5 w-5" />,
-    description: 'Programmatic video rendering',
-  },
-  n8n: {
-    label: 'n8n',
-    icon: <Webhook className="h-5 w-5" />,
-    description: 'Self-hosted workflow automation',
-  },
-  youtube: {
-    label: 'YouTube',
-    icon: <Globe className="h-5 w-5" />,
-    description: 'YouTube publishing and analytics',
-  },
-  tiktok: {
-    label: 'TikTok',
-    icon: <Globe className="h-5 w-5" />,
-    description: 'TikTok publishing',
-  },
-  instagram: {
-    label: 'Instagram',
-    icon: <Globe className="h-5 w-5" />,
-    description: 'Instagram and Reels publishing',
-  },
-  scrapegraph: {
-    label: 'ScrapeGraphAI',
-    icon: <Database className="h-5 w-5" />,
-    description: 'Autonomous LLM-based web scraping',
-  },
-  hermes: {
-    label: 'Hermes Agent',
-    icon: <Cpu className="h-5 w-5" />,
-    description: 'Advanced multi-step reasoning agent',
-  },
-  cobalt: {
-    label: 'Cobalt',
-    icon: <Globe className="h-5 w-5" />,
-    description: 'Local video downloader service',
-  },
-}
+const PLATFORMS = [
+  { id: 'youtube', name: 'YouTube', description: 'Publish videos, Shorts, and manage your channel.', icon: '▶', cardCls: 'border-red-200 bg-red-50', iconBg: 'bg-red-500', docsUrl: 'https://developers.google.com/youtube/v3' },
+  { id: 'instagram', name: 'Instagram', description: 'Post Reels, carousels, and stories via the Graph API.', icon: '📷', cardCls: 'border-pink-200 bg-pink-50', iconBg: 'bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600', docsUrl: 'https://developers.facebook.com/docs/instagram-api' },
+  { id: 'tiktok', name: 'TikTok', description: 'Publish videos to your TikTok creator account.', icon: '🎵', cardCls: 'border-slate-200 bg-slate-50', iconBg: 'bg-slate-900', docsUrl: 'https://developers.tiktok.com' },
+  { id: 'linkedin', name: 'LinkedIn', description: 'Share posts and articles with your professional network.', icon: 'in', cardCls: 'border-blue-200 bg-blue-50', iconBg: 'bg-blue-700', docsUrl: 'https://developer.linkedin.com' },
+  { id: 'twitter', name: 'Twitter / X', description: 'Post tweets and threads, upload media.', icon: 'X', cardCls: 'border-sky-200 bg-sky-50', iconBg: 'bg-black', docsUrl: 'https://developer.twitter.com' },
+]
 
-function StatusIndicator({ status }: { status: Integration['status'] }) {
-  if (status === 'connected') {
-    return (
-      <div className="flex items-center gap-1.5">
-        <span className="h-2 w-2 rounded-full bg-emerald-400" />
-        <span className="text-xs font-medium text-emerald-600">Connected</span>
-      </div>
-    )
-  }
-  if (status === 'error') {
-    return (
-      <div className="flex items-center gap-1.5">
-        <span className="h-2 w-2 rounded-full bg-red-400" />
-        <span className="text-xs font-medium text-red-600">Error</span>
-      </div>
-    )
-  }
-  return (
-    <div className="flex items-center gap-1.5">
-      <span className="h-2 w-2 rounded-full bg-slate-300" />
-      <span className="text-xs font-medium text-slate-500">Disconnected</span>
-    </div>
-  )
-}
+const LOCAL_SERVICES = [
+  { name: 'Supabase', url: 'http://127.0.0.1:54321', label: 'Database + Auth' },
+  { name: 'Ollama', url: 'http://localhost:11434', label: 'LLM (idea generation)' },
+  { name: 'Whisper', url: 'http://localhost:9000', label: 'Speech-to-text' },
+  { name: 'n8n', url: 'http://localhost:5678', label: 'Workflow automation' },
+]
 
-export default async function IntegrationsPage() {
-  const supabase = await createServerClient()
-
-  let integrations = null
-  let queryError = null
-
+async function checkLocalService(url: string): Promise<boolean> {
   try {
-    const { data, error } = await supabase
-      .from('integrations')
-      .select('*')
-      .eq('workspace_id', WORKSPACE_ID)
-      .order('provider')
-    
-    integrations = data
-    queryError = error
-  } catch (err: any) {
-    if (err?.message === 'fetch failed' || err?.name === 'TypeError') {
-      return (
-        <ErrorState
-          title="Failed to connect to database"
-          description="Could not reach the local Supabase server. Please ensure you have run 'npx supabase start' or 'supabase start' in your terminal."
-        />
-      )
-    }
-    queryError = err
+    const res = await fetch(url, { signal: AbortSignal.timeout(2000) })
+    return res.ok || res.status < 500
+  } catch {
+    return false
   }
+}
 
-  if (queryError) {
-    return <ErrorState title="Failed to load integrations" description={queryError.message || 'Unknown error'} />
-  }
+export default async function IntegrationsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string>>
+}) {
+  const params = await searchParams
+  const connectedProvider = params.connected
+  const errorMsg = params.error
 
-  const allIntegrations: Integration[] = integrations ?? []
-  
-  // Auto-detect status for local services
-  for (const integration of allIntegrations) {
-    if (['ollama', 'whisper', 'n8n', 'cobalt'].includes(integration.provider.toLowerCase())) {
-      integration.status = await checkIntegrationStatus(integration.provider)
-    }
-  }
+  const supabase = await createServerClient()
+  const { data: integrations } = await supabase
+    .from('integrations')
+    .select('provider, status, platform_user_id, token_expires_at')
+    .eq('workspace_id', WORKSPACE_ID)
 
-  const connected = allIntegrations.filter((i) => i.status === 'connected').length
+  const integrationMap = Object.fromEntries((integrations ?? []).map((i: Record<string, unknown>) => [i.provider, i]))
 
-  // Build a complete list: configured + available to add
-  const configuredProviders = new Set(allIntegrations.map((i) => i.provider))
-  const allProviders = Object.keys(PROVIDER_CONFIG)
+  const localStatuses = await Promise.all(
+    LOCAL_SERVICES.map(async (svc) => ({ ...svc, online: await checkLocalService(svc.url) }))
+  )
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Integrations</h1>
-          <p className="mt-0.5 text-sm text-slate-500">
-            {connected} connected · {allIntegrations.length} configured
-          </p>
-        </div>
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Integrations</h1>
+        <p className="mt-0.5 text-sm text-slate-500">Connect social platforms and manage local services.</p>
       </div>
 
-      {/* Configured integrations */}
-      {allIntegrations.length > 0 && (
-        <div>
-          <h2 className="mb-3 text-sm font-semibold text-slate-600 uppercase tracking-wide">
-            Configured
-          </h2>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {allIntegrations.map((integration) => {
-              const config = PROVIDER_CONFIG[integration.provider]
-              return (
-                <Card key={integration.id} className="relative">
-                  <CardContent className="p-5">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-50 border border-slate-200 text-slate-600">
-                          {config?.icon ?? <Globe className="h-5 w-5" />}
-                        </div>
-                        <div>
-                          <p className="text-sm font-semibold text-slate-900">
-                            {config?.label ?? integration.provider}
-                          </p>
-                          <StatusIndicator status={integration.status} />
-                        </div>
-                      </div>
-                      <Button variant="outline" size="sm" className="h-7 text-xs">
-                        Configure
-                      </Button>
-                    </div>
-                    <p className="mt-3 text-xs text-slate-500">
-                      {config?.description ?? integration.provider}
-                    </p>
-                    <Separator className="my-3" />
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-400">Last updated</span>
-                      <span className="font-mono text-slate-400">
-                        {formatDistanceToNow(new Date(integration.updated_at), { addSuffix: true })}
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-              )
-            })}
-          </div>
+      {connectedProvider && (
+        <div className="flex items-center gap-2 rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-700">
+          <CheckCircle2 className="h-4 w-4 shrink-0" />
+          <strong className="capitalize">{connectedProvider}</strong> connected successfully.
+        </div>
+      )}
+      {errorMsg && (
+        <div className="flex items-center gap-2 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+          <XCircle className="h-4 w-4 shrink-0" />
+          Connection failed: {decodeURIComponent(errorMsg)}
         </div>
       )}
 
-      {/* Available to configure */}
       <div>
-        <h2 className="mb-3 text-sm font-semibold text-slate-600 uppercase tracking-wide">
-          Available
-        </h2>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {allProviders
-            .filter((p) => !configuredProviders.has(p))
-            .map((provider) => {
-              const config = PROVIDER_CONFIG[provider]
-              return (
-                <Card key={provider} className="border-dashed bg-slate-50/50">
-                  <CardContent className="p-5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white border border-slate-200 text-slate-400">
-                          {config.icon}
-                        </div>
-                        <div>
-                          <p className="text-sm font-semibold text-slate-600">{config.label}</p>
-                          <div className="flex items-center gap-1.5">
-                            <span className="h-2 w-2 rounded-full bg-slate-200" />
-                            <span className="text-xs text-slate-400">Not configured</span>
-                          </div>
-                        </div>
-                      </div>
-                      <Button variant="outline" size="sm" className="h-7 text-xs gap-1" asChild>
-                        <a href={`/api/auth/callback/${provider}`}>
-                          <Plus className="h-3 w-3" />
-                          Add
-                        </a>
-                      </Button>
+        <h2 className="text-sm font-semibold text-slate-700 mb-4">Social Platforms</h2>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {PLATFORMS.map((platform) => {
+            const integration = integrationMap[platform.id] as Record<string, unknown> | undefined
+            const connected = integration?.status === 'connected'
+            const expired = integration?.token_expires_at
+              ? new Date(integration.token_expires_at as string) < new Date()
+              : false
+
+            return (
+              <Card key={platform.id} className={`border ${platform.cardCls}`}>
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between">
+                    <div className={`flex h-10 w-10 items-center justify-center rounded-xl text-white text-sm font-bold ${platform.iconBg}`}>
+                      {platform.icon}
                     </div>
-                    <p className="mt-3 text-xs text-slate-400">{config.description}</p>
-                  </CardContent>
-                </Card>
-              )
-            })}
+                    {connected ? (
+                      <Badge className={expired ? 'bg-amber-100 text-amber-700 border-amber-200' : 'bg-emerald-100 text-emerald-700 border-emerald-200'}>
+                        {expired ? 'Token expired' : 'Connected'}
+                      </Badge>
+                    ) : (
+                      <Badge className="bg-slate-100 text-slate-500 border-slate-200">Not connected</Badge>
+                    )}
+                  </div>
+                  <CardTitle className="text-sm font-semibold mt-3">{platform.name}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <p className="text-xs text-slate-500">{platform.description}</p>
+                  {connected && !!integration?.platform_user_id && (
+                    <p className="text-xs text-slate-400 font-mono">ID: {String(integration.platform_user_id)}</p>
+                  )}
+                  <div className="flex items-center gap-2 pt-1">
+                    {connected ? (
+                      <>
+                        <Button size="sm" variant="outline" className="h-7 text-xs" asChild>
+                          <Link href={`/api/oauth/${platform.id}`}>Reconnect</Link>
+                        </Button>
+                        <a href={platform.docsUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-slate-400 hover:text-slate-600 inline-flex items-center gap-1">
+                          Docs <ExternalLink className="h-3 w-3" />
+                        </a>
+                      </>
+                    ) : (
+                      <Button size="sm" className="h-7 text-xs bg-blue-500 hover:bg-blue-600 text-white" asChild>
+                        <Link href={`/api/oauth/${platform.id}`}>Connect</Link>
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )
+          })}
         </div>
-        {allProviders.filter((p) => !configuredProviders.has(p)).length === 0 && (
-          <p className="text-sm text-slate-400 italic">All providers are configured.</p>
-        )}
+      </div>
+
+      <div>
+        <h2 className="text-sm font-semibold text-slate-700 mb-4">Local Services</h2>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {localStatuses.map((svc) => (
+            <div key={svc.name} className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3">
+              <div>
+                <p className="text-sm font-medium text-slate-800">{svc.name}</p>
+                <p className="text-xs text-slate-400">{svc.label} · <span className="font-mono text-[11px]">{svc.url}</span></p>
+              </div>
+              {svc.online ? (
+                <span className="flex items-center gap-1.5 text-emerald-600 text-xs font-medium"><CheckCircle2 className="h-3.5 w-3.5" /> Online</span>
+              ) : (
+                <span className="flex items-center gap-1.5 text-slate-400 text-xs font-medium"><AlertCircle className="h-3.5 w-3.5" /> Offline</span>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )

@@ -51,8 +51,8 @@ function bindEvents(
   let stdout = ''
   let stderr = ''
 
-  proc.stdout.on('data', (data) => { stdout += data.toString() })
-  proc.stderr.on('data', (data) => { stderr += data.toString() })
+  proc.stdout?.on('data', (data) => { stdout += data.toString() })
+  proc.stderr?.on('data', (data) => { stderr += data.toString() })
 
   proc.on('close', (code) => {
     if (code !== 0) {
