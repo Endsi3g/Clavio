@@ -48,7 +48,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { VersionSwitcher } from './version-switcher'
+import { WorkspaceSwitcher } from './workspace-switcher'
 import { Button } from '@/components/ui/button'
 import { signOut } from '@/app/actions/auth'
 import { createClient } from '@/lib/supabase/client'
@@ -119,10 +119,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar {...props}>
       <SidebarHeader className="p-4">
-        <VersionSwitcher
-          versions={['Clavio Default']}
-          defaultVersion="Clavio Default"
-        />
+        <WorkspaceSwitcher />
       </SidebarHeader>
       <SidebarContent className="px-2 gap-0">
         {navCategories.map((category) => (

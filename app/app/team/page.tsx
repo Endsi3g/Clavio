@@ -6,6 +6,7 @@ import { Users } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { InviteMemberForm } from './invite-member-form'
 import { MemberActions } from './member-actions'
+import { OnlineCount, MemberPresenceDot } from './online-count'
 
 export const dynamic = 'force-dynamic'
 
@@ -35,9 +36,12 @@ export default async function TeamPage() {
 
   return (
     <div className="space-y-6 max-w-3xl">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Team</h1>
-        <p className="mt-0.5 text-sm text-slate-500">Manage workspace members and roles.</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Team</h1>
+          <p className="mt-0.5 text-sm text-slate-500">Manage workspace members and roles.</p>
+        </div>
+        <OnlineCount />
       </div>
 
       {/* Invite */}
@@ -77,18 +81,23 @@ export default async function TeamPage() {
 
                 return (
                   <li key={m.user_id} className="flex items-center gap-4 px-6 py-4">
-                    {profile?.avatar_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={profile.avatar_url}
-                        alt={profile.full_name ?? 'Avatar'}
-                        className="h-8 w-8 rounded-full object-cover shrink-0"
-                      />
-                    ) : (
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-600">
-                        {initials}
-                      </div>
-                    )}
+                    <div className="relative shrink-0">
+                      {profile?.avatar_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={profile.avatar_url}
+                          alt={profile.full_name ?? 'Avatar'}
+                          className="h-8 w-8 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-600">
+                          {initials}
+                        </div>
+                      )}
+                      <span className="absolute -bottom-0.5 -right-0.5">
+                        <MemberPresenceDot userId={m.user_id} />
+                      </span>
+                    </div>
 
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-slate-900 truncate">
