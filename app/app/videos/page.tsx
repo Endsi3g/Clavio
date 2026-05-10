@@ -50,7 +50,7 @@ export default async function VideosPage() {
   ])
 
   if (videosResult.error) {
-    return <ErrorState title="Failed to load videos" description={videosResult.error.message} />
+    return <ErrorState title={t.errorStates.loadFailed.title} description={videosResult.error.message} />
   }
 
   const videos: Video[] = videosResult.data ?? []
@@ -76,18 +76,18 @@ export default async function VideosPage() {
             {videos.length} {t.videos.title.toLowerCase()}
             {processingCount > 0 && (
               <span className="ml-2 inline-flex items-center gap-1 text-blue-600">
-                · {processingCount} processing
+                · {processingCount} {t.videos.processing}
               </span>
             )}
           </p>
         </div>
         <div className="flex flex-col items-end gap-2">
-          <RealtimeStatus channelName="videos-page" label="Live" />
+          <RealtimeStatus channelName="videos-page" label={t.common.live} />
           <div className="flex items-center gap-2">
             <ImportVideoDialog>
               <Button size="sm" variant="outline" className="gap-1.5">
                 <LinkIcon className="h-3.5 w-3.5" />
-                Import from URL
+                {t.videos.importUrl}
               </Button>
             </ImportVideoDialog>
             <VideosUploadButton />
@@ -98,8 +98,8 @@ export default async function VideosPage() {
       {/* Table */}
       {videos.length === 0 ? (
         <EmptyState
-          title={t.videos.title + ' (Empty)'}
-          description="Upload a source file to begin the video processing pipeline."
+          title={t.emptyStates.noVideos.title}
+          description={t.emptyStates.noVideos.description}
           action={<VideosUploadButton />}
         />
       ) : (
@@ -109,13 +109,13 @@ export default async function VideosPage() {
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
                   <TableHead className="w-[88px]" />
-                  <TableHead className="w-[28%]">Title</TableHead>
-                  <TableHead>Duration</TableHead>
-                  <TableHead>Transcription</TableHead>
-                  <TableHead>Processing</TableHead>
-                  <TableHead>Clips</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Created</TableHead>
+                  <TableHead className="w-[28%]">{t.common.title}</TableHead>
+                  <TableHead>{t.common.duration}</TableHead>
+                  <TableHead>{t.common.transcription}</TableHead>
+                  <TableHead>{t.common.processing}</TableHead>
+                  <TableHead>{t.common.clips}</TableHead>
+                  <TableHead>{t.common.status}</TableHead>
+                  <TableHead>{t.common.created}</TableHead>
                   <TableHead className="w-[60px]" />
                 </TableRow>
               </TableHeader>

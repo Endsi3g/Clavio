@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { User, Settings, LogOut } from 'lucide-react'
 import { signOut } from '@/app/actions/auth'
 import {
@@ -18,35 +18,37 @@ import { CommandMenu } from '@/components/command-menu'
 import { NotificationCenter } from './notification-center'
 import { useI18n } from '@/components/i18n-provider'
 
-const segmentLabels: Record<string, string> = {
-  app: 'App',
-  dashboard: 'Dashboard',
-  ideas: 'Ideas',
-  videos: 'Videos',
-  clips: 'Clips',
-  publishing: 'Publishing',
-  analytics: 'Analytics',
-  assets: 'Assets',
-  automations: 'Automations',
-  integrations: 'Integrations',
-  logs: 'Logs',
-  settings: 'Settings',
-  profile: 'Profile',
-}
-
-function getSegmentLabel(segment: string): string {
-  // Dynamic segments like [id] — use context-aware labels
-  if (segment.startsWith('[') || /^[0-9a-f-]{8,}$/i.test(segment)) return 'Detail'
-  return segmentLabels[segment] ?? segment.charAt(0).toUpperCase() + segment.slice(1)
-}
-
 function Breadcrumbs({ pathname }: { pathname: string }) {
+  const { t } = useI18n()
+  
+  const segmentLabels: Record<string, string> = {
+    app: 'App',
+    dashboard: t.sidebar.dashboard,
+    ideas: t.sidebar.ideas,
+    videos: t.sidebar.videos,
+    clips: t.sidebar.clips,
+    publishing: t.sidebar.publishing,
+    analytics: t.sidebar.analytics,
+    assets: t.sidebar.assets,
+    automations: t.sidebar.automations,
+    integrations: t.sidebar.integrations,
+    logs: t.sidebar.logs,
+    settings: t.sidebar.settings,
+    profile: t.common.profile,
+  }
+
   const parts = pathname.split('/').filter(Boolean)
   // Skip the first "app" segment — it's not meaningful to display
   const displayParts = parts.slice(1)
 
   if (displayParts.length === 0) {
     return <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">Clavio</span>
+  }
+
+  function getSegmentLabel(segment: string): string {
+    // Dynamic segments like [id] — use context-aware labels
+    if (segment.startsWith('[') || /^[0-9a-f-]{8,}$/i.test(segment)) return 'Detail'
+    return segmentLabels[segment] ?? segment.charAt(0).toUpperCase() + segment.slice(1)
   }
 
   return (
@@ -82,7 +84,16 @@ interface TopBarProps {
 
 export function TopBar({ notificationCount = 0 }: TopBarProps) {
   const pathname = usePathname()
-  const { locale, setLocale } = useI18n()
+  const router = useRouter()
+  const { t, locale, setLocale } = useI18n()
+
+  const handleToggleLanguage = () => {
+    const next = locale === 'en' ? 'fr' : 'en'
+    // Set cookie immediately so server components see it on refresh
+    document.cookie = `clavio-locale=${next}; path=/; max-age=${60 * 60 * 24 * 365}`
+    setLocale(next)
+    router.refresh()
+  }
 
   return (
     <div className="flex w-full items-center justify-between">
@@ -103,7 +114,7 @@ export function TopBar({ notificationCount = 0 }: TopBarProps) {
       {/* Right: actions */}
       <div className="flex items-center gap-1.5 sm:gap-2">
         <button
-          onClick={() => setLocale(locale === 'en' ? 'fr' : 'en')}
+          onClick={handleToggleLanguage}
           className="flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100 transition-colors uppercase"
           aria-label="Toggle language"
         >
@@ -127,18 +138,18 @@ export function TopBar({ notificationCount = 0 }: TopBarProps) {
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuLabel>{t.sidebar.workspace}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <Link href="/app/profile" className="flex items-center">
                 <User className="mr-2 h-4 w-4" />
-                <span>Profile</span>
+                <span>{t.common.profile}</span>
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link href="/app/settings" className="flex items-center">
                 <Settings className="mr-2 h-4 w-4" />
-                <span>Settings</span>
+                <span>{t.common.preferences}</span>
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
@@ -146,7 +157,7 @@ export function TopBar({ notificationCount = 0 }: TopBarProps) {
               <form action={signOut} className="w-full">
                 <button type="submit" className="flex w-full items-center text-red-600 dark:text-red-400">
                   <LogOut className="mr-2 h-4 w-4" />
-                  Log out
+                  {t.common.signOut}
                 </button>
               </form>
             </DropdownMenuItem>

@@ -8,12 +8,14 @@ import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
 
+import { BrandIcon, BrandType } from '@/components/brand-icon'
+
 const PLATFORMS = [
-  { id: 'youtube', name: 'YouTube', description: 'Publish videos, Shorts, and manage your channel.', icon: '▶', cardCls: 'border-red-200 bg-red-50', iconBg: 'bg-red-500', docsUrl: 'https://developers.google.com/youtube/v3' },
-  { id: 'instagram', name: 'Instagram', description: 'Post Reels, carousels, and stories via the Graph API.', icon: '📷', cardCls: 'border-pink-200 bg-pink-50', iconBg: 'bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600', docsUrl: 'https://developers.facebook.com/docs/instagram-api' },
-  { id: 'tiktok', name: 'TikTok', description: 'Publish videos to your TikTok creator account.', icon: '🎵', cardCls: 'border-slate-200 bg-slate-50', iconBg: 'bg-slate-900', docsUrl: 'https://developers.tiktok.com' },
-  { id: 'linkedin', name: 'LinkedIn', description: 'Share posts and articles with your professional network.', icon: 'in', cardCls: 'border-blue-200 bg-blue-50', iconBg: 'bg-blue-700', docsUrl: 'https://developer.linkedin.com' },
-  { id: 'twitter', name: 'Twitter / X', description: 'Post tweets and threads, upload media.', icon: 'X', cardCls: 'border-sky-200 bg-sky-50', iconBg: 'bg-black', docsUrl: 'https://developer.twitter.com' },
+  { id: 'youtube' as BrandType, name: 'YouTube', description: 'Publish videos, Shorts, and manage your channel.', icon: <BrandIcon brand="youtube" />, cardCls: 'border-red-200 bg-red-50', iconBg: 'bg-red-500', docsUrl: 'https://developers.google.com/youtube/v3' },
+  { id: 'instagram' as BrandType, name: 'Instagram', description: 'Post Reels, carousels, and stories via the Graph API.', icon: <BrandIcon brand="instagram" />, cardCls: 'border-pink-200 bg-pink-50', iconBg: 'bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600', docsUrl: 'https://developers.facebook.com/docs/instagram-api' },
+  { id: 'tiktok' as BrandType, name: 'TikTok', description: 'Publish videos to your TikTok creator account.', icon: <BrandIcon brand="tiktok" />, cardCls: 'border-slate-200 bg-slate-50', iconBg: 'bg-slate-900', docsUrl: 'https://developers.tiktok.com' },
+  { id: 'linkedin' as BrandType, name: 'LinkedIn', description: 'Share posts and articles with your professional network.', icon: <BrandIcon brand="linkedin" />, cardCls: 'border-blue-200 bg-blue-50', iconBg: 'bg-blue-700', docsUrl: 'https://developer.linkedin.com' },
+  { id: 'twitter' as BrandType, name: 'Twitter / X', description: 'Post tweets and threads, upload media.', icon: <BrandIcon brand="twitter" />, cardCls: 'border-sky-200 bg-sky-50', iconBg: 'bg-black', docsUrl: 'https://developer.twitter.com' },
 ]
 
 const LOCAL_SERVICES = [
@@ -32,11 +34,14 @@ async function checkLocalService(url: string): Promise<boolean> {
   }
 }
 
+import { getDictionary } from '@/lib/i18n/server'
+
 export default async function IntegrationsPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string>>
 }) {
+  const t = await getDictionary()
   const params = await searchParams
   const connectedProvider = params.connected
   const errorMsg = params.error
@@ -56,25 +61,25 @@ export default async function IntegrationsPage({
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Integrations</h1>
-        <p className="mt-0.5 text-sm text-slate-500">Connect social platforms and manage local services.</p>
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{t.integrations.title}</h1>
+        <p className="mt-0.5 text-sm text-slate-500">{t.integrations.subtitle}</p>
       </div>
 
       {connectedProvider && (
         <div className="flex items-center gap-2 rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-700">
           <CheckCircle2 className="h-4 w-4 shrink-0" />
-          <strong className="capitalize">{connectedProvider}</strong> connected successfully.
+          <strong className="capitalize">{connectedProvider}</strong> {t.integrations.connected.toLowerCase()}.
         </div>
       )}
       {errorMsg && (
         <div className="flex items-center gap-2 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
           <XCircle className="h-4 w-4 shrink-0" />
-          Connection failed: {decodeURIComponent(errorMsg)}
+          {t.common.failed}: {decodeURIComponent(errorMsg)}
         </div>
       )}
 
       <div>
-        <h2 className="text-sm font-semibold text-slate-700 mb-4">Social Platforms</h2>
+        <h2 className="text-sm font-semibold text-slate-700 mb-4">{t.integrations.social}</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {PLATFORMS.map((platform) => {
             const integration = integrationMap[platform.id] as Record<string, unknown> | undefined
@@ -92,10 +97,10 @@ export default async function IntegrationsPage({
                     </div>
                     {connected ? (
                       <Badge className={expired ? 'bg-amber-100 text-amber-700 border-amber-200' : 'bg-emerald-100 text-emerald-700 border-emerald-200'}>
-                        {expired ? 'Token expired' : 'Connected'}
+                        {expired ? t.integrations.tokenExpired : t.integrations.connected}
                       </Badge>
                     ) : (
-                      <Badge className="bg-slate-100 text-slate-500 border-slate-200">Not connected</Badge>
+                      <Badge className="bg-slate-100 text-slate-500 border-slate-200">{t.integrations.notConnected}</Badge>
                     )}
                   </div>
                   <CardTitle className="text-sm font-semibold mt-3">{platform.name}</CardTitle>
@@ -109,15 +114,15 @@ export default async function IntegrationsPage({
                     {connected ? (
                       <>
                         <Button size="sm" variant="outline" className="h-7 text-xs" asChild>
-                          <Link href={`/api/oauth/${platform.id}`}>Reconnect</Link>
+                          <Link href={`/api/oauth/${platform.id}`}>{t.common.reconnect}</Link>
                         </Button>
                         <a href={platform.docsUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-slate-400 hover:text-slate-600 inline-flex items-center gap-1">
-                          Docs <ExternalLink className="h-3 w-3" />
+                          {t.common.docs} <ExternalLink className="h-3 w-3" />
                         </a>
                       </>
                     ) : (
                       <Button size="sm" className="h-7 text-xs bg-blue-500 hover:bg-blue-600 text-white" asChild>
-                        <Link href={`/api/oauth/${platform.id}`}>Connect</Link>
+                        <Link href={`/api/oauth/${platform.id}`}>{t.common.connect}</Link>
                       </Button>
                     )}
                   </div>
@@ -129,7 +134,7 @@ export default async function IntegrationsPage({
       </div>
 
       <div>
-        <h2 className="text-sm font-semibold text-slate-700 mb-4">Local Services</h2>
+        <h2 className="text-sm font-semibold text-slate-700 mb-4">{t.integrations.local}</h2>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {localStatuses.map((svc) => (
             <div key={svc.name} className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3">

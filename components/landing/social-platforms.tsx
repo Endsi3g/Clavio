@@ -1,51 +1,52 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { BrandIcon, BrandType } from '@/components/brand-icon'
 
 const PLATFORMS = [
   {
     name: 'YouTube',
+    id: 'youtube' as BrandType,
     color: 'bg-red-500',
     textColor: 'text-red-400',
     border: 'border-red-500/20',
     bg: 'bg-red-500/10',
-    initial: 'YT',
     stats: 'Video + Shorts',
   },
   {
     name: 'Instagram',
+    id: 'instagram' as BrandType,
     color: 'bg-pink-500',
     textColor: 'text-pink-400',
     border: 'border-pink-500/20',
     bg: 'bg-pink-500/10',
-    initial: 'IG',
     stats: 'Reels + Posts',
   },
   {
     name: 'TikTok',
+    id: 'tiktok' as BrandType,
     color: 'bg-slate-100',
     textColor: 'text-slate-300',
     border: 'border-slate-600/40',
     bg: 'bg-slate-800/60',
-    initial: 'TK',
     stats: 'Video + Carousels',
   },
   {
     name: 'LinkedIn',
+    id: 'linkedin' as BrandType,
     color: 'bg-blue-600',
     textColor: 'text-blue-400',
     border: 'border-blue-500/20',
     bg: 'bg-blue-500/10',
-    initial: 'LI',
     stats: 'Posts + Articles',
   },
   {
     name: 'Twitter / X',
+    id: 'twitter' as BrandType,
     color: 'bg-sky-500',
     textColor: 'text-sky-400',
     border: 'border-sky-500/20',
     bg: 'bg-sky-500/10',
-    initial: 'X',
     stats: 'Tweets + Threads',
   },
 ]
@@ -78,8 +79,8 @@ export function SocialPlatforms() {
               transition={{ duration: 0.4, delay: i * 0.08 }}
               className={`group rounded-2xl border ${platform.border} ${platform.bg} p-6 text-center hover:scale-[1.03] transition-transform duration-200 cursor-default`}
             >
-              <div className={`mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl ${platform.color} text-white text-lg font-bold shadow-lg`}>
-                {platform.initial}
+              <div className={`mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl ${platform.color} shadow-lg`}>
+                <BrandIcon brand={platform.id} size={28} className="text-white" />
               </div>
               <h3 className={`font-semibold ${platform.textColor} mb-1`}>{platform.name}</h3>
               <p className="text-xs text-slate-500">{platform.stats}</p>
@@ -100,9 +101,9 @@ export function SocialPlatforms() {
               {PLATFORMS.map((p) => (
                 <div
                   key={p.name}
-                  className={`h-8 w-8 rounded-full ${p.color} flex items-center justify-center text-white text-[10px] font-bold border-2 border-slate-900`}
+                  className={`h-8 w-8 rounded-full ${p.color} flex items-center justify-center border-2 border-slate-900 shadow-sm`}
                 >
-                  {p.initial}
+                  <BrandIcon brand={p.id} size={14} className="text-white" />
                 </div>
               ))}
             </div>

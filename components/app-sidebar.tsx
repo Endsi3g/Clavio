@@ -83,25 +83,25 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         { label: t.sidebar.ideas, href: '/app/ideas', icon: Lightbulb },
         { label: t.sidebar.videos, href: '/app/videos', icon: Video },
         { label: t.sidebar.publishing, href: '/app/publishing', icon: Send },
-        { label: 'Calendar', href: '/app/calendar', icon: Calendar },
+        { label: t.sidebar.calendar, href: '/app/calendar', icon: Calendar },
         { label: t.sidebar.analytics, href: '/app/analytics', icon: BarChart3 },
       ]
     },
     {
-      title: 'AI Systems',
+      title: t.sidebar.aiSystems,
       items: [
-        { label: 'Smart Worker', href: '/app/smart-worker', icon: Brain },
-        { label: 'Agents', href: '/app/agents', icon: Bot },
-        { label: 'Render Engine', href: '/app/render', icon: Film },
-        { label: 'Automation Bridge', href: '/app/automation', icon: Webhook },
+        { label: t.sidebar.smartWorker, href: '/app/smart-worker', icon: Brain },
+        { label: t.sidebar.agents, href: '/app/agents', icon: Bot },
+        { label: t.sidebar.renderEngine, href: '/app/render', icon: Film },
+        { label: t.sidebar.automationBridge, href: '/app/automation', icon: Webhook },
       ]
     },
     {
       title: t.sidebar.resources,
       items: [
-        { label: 'News', href: '/app/news', icon: Newspaper },
+        { label: t.sidebar.news, href: '/app/news', icon: Newspaper },
         { label: t.sidebar.assets, href: '/app/assets', icon: Files },
-        { label: 'Templates', href: '/app/templates', icon: Layout },
+        { label: t.sidebar.templates, href: '/app/templates', icon: Layout },
         { label: t.sidebar.automations, href: '/app/automations', icon: Zap },
         { label: t.sidebar.integrations, href: '/app/integrations', icon: LinkIcon },
       ]
@@ -109,7 +109,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     {
       title: t.sidebar.system,
       items: [
-        { label: 'Team', href: '/app/team', icon: Users },
+        { label: t.sidebar.team, href: '/app/team', icon: Users },
         { label: t.sidebar.logs, href: '/app/logs', icon: ScrollText },
         { label: t.sidebar.settings, href: '/app/settings', icon: Settings },
       ]
@@ -152,8 +152,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           size="sm"
           className="w-full justify-start gap-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 mb-2"
           onClick={() => {
-            const newLocale = locale === 'en' ? 'fr' : 'en'
-            setLocale(newLocale)
+            const next = locale === 'en' ? 'fr' : 'en'
+            document.cookie = `clavio-locale=${next}; path=/; max-age=${60 * 60 * 24 * 365}`
+            setLocale(next)
             React.startTransition(() => {
               router.refresh()
             })
@@ -190,13 +191,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <DropdownMenuItem asChild>
                   <Link href="/app/profile" className="flex items-center">
                     <User2 className="mr-2 h-4 w-4" />
-                    <span>Profile</span>
+                    <span>{t.common.profile}</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/app/settings" className="flex items-center">
                     <Settings className="mr-2 h-4 w-4" />
-                    <span>Preferences</span>
+                    <span>{t.common.preferences}</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
@@ -204,7 +205,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   <form action={signOut} className="w-full">
                     <button type="submit" className="flex w-full items-center gap-2 text-red-600">
                       <LogOut className="h-4 w-4" />
-                      Sign out
+                      {t.common.signOut}
                     </button>
                   </form>
                 </DropdownMenuItem>

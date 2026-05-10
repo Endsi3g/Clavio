@@ -14,14 +14,14 @@ function StatusBadge({ status }: { status: string }) {
     completed: 'bg-emerald-100 text-emerald-700',
     failed: 'bg-red-100 text-red-700',
     processing: 'bg-blue-100 text-blue-700 animate-pulse',
-    pending: 'bg-amber-100 text-amber-700',
+    draft: 'bg-amber-100 text-amber-700',
   }
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${map[status] ?? 'bg-slate-100 text-slate-600'}`}>
       {status === 'completed' && <CheckCircle2 className="h-3 w-3" />}
       {status === 'failed' && <XCircle className="h-3 w-3" />}
       {status === 'processing' && <Loader2 className="h-3 w-3 animate-spin" />}
-      {status === 'pending' && <Clock className="h-3 w-3" />}
+      {status === 'draft' && <Clock className="h-3 w-3" />}
       <span className="capitalize">{status}</span>
     </span>
   )
@@ -47,7 +47,7 @@ export default async function RenderPage() {
   ])
 
   const jobs = (renderJobs ?? []) as (RenderJob & { clips: { title: string; video_id: string } | null })[]
-  const pendingCount = jobs.filter(j => j.status === 'processing' || j.status === 'pending').length
+  const pendingCount = jobs.filter(j => j.status === 'processing' || j.status === 'draft').length
   const completedCount = jobs.filter(j => j.status === 'completed').length
   const failedCount = jobs.filter(j => j.status === 'failed').length
 

@@ -3,8 +3,8 @@ import { TopBar } from '@/components/layout/top-bar'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { KeyboardShortcuts } from '@/components/keyboard-shortcuts'
 import { MobileBottomNav } from '@/components/mobile-bottom-nav'
-
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+import { getDictionary } from '@/lib/i18n/server'
+export default async function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
       <AppSidebar />

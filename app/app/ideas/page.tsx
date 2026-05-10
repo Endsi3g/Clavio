@@ -53,7 +53,7 @@ export default async function IdeasPage({
   }
 
   if (queryError) {
-    return <ErrorState title="Failed to load ideas" description={queryError.message || 'Unknown error occurred'} />
+    return <ErrorState title={t.errorStates.loadFailed.title} description={queryError.message || t.errorStates.loadFailed.description} />
   }
 
   return (
@@ -65,11 +65,11 @@ export default async function IdeasPage({
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{t.ideas.title}</h1>
           <p className="mt-0.5 text-sm text-slate-500">
-            {ideas?.length ?? 0} {t.ideas.title.toLowerCase()} in workspace
+            {ideas?.length ?? 0} {t.ideas.title.toLowerCase()}
           </p>
         </div>
         <div className="flex flex-col items-end gap-2">
-          <RealtimeStatus channelName="ideas-page" label="Live" />
+          <RealtimeStatus channelName="ideas-page" label={t.common.live} />
           <div className="flex items-center gap-2">
             <IdeasGenerateButton />
             <NewIdeaDialog>
@@ -87,27 +87,27 @@ export default async function IdeasPage({
         filters={[
           {
             key: 'status',
-            label: 'Status',
+            label: t.common.status,
             options: [
-              { label: 'Draft', value: 'draft' },
-              { label: 'Review', value: 'review' },
-              { label: 'Scheduled', value: 'scheduled' },
-              { label: 'Published', value: 'published' },
-              { label: 'Archived', value: 'archived' },
+              { label: t.ideas.status.draft, value: 'draft' },
+              { label: t.ideas.status.review, value: 'review' },
+              { label: t.ideas.status.scheduled, value: 'scheduled' },
+              { label: t.ideas.status.published, value: 'published' },
+              { label: t.ideas.status.archived, value: 'archived' },
             ],
           },
           {
             key: 'priority',
-            label: 'Priority',
+            label: t.common.priority,
             options: [
-              { label: 'High', value: 'high' },
-              { label: 'Medium', value: 'medium' },
-              { label: 'Low', value: 'low' },
+              { label: t.ideas.priority.high, value: 'high' },
+              { label: t.ideas.priority.medium, value: 'medium' },
+              { label: t.ideas.priority.low, value: 'low' },
             ],
           },
           {
             key: 'platform',
-            label: 'Platform',
+            label: t.common.platform,
             options: [
               { label: 'YouTube', value: 'youtube' },
               { label: 'TikTok', value: 'tiktok' },
@@ -122,8 +122,8 @@ export default async function IdeasPage({
       {/* Content */}
       {!ideas || ideas.length === 0 ? (
         <EmptyState
-          title="No ideas yet"
-          description="Create your first idea or generate one from a prompt."
+          title={t.emptyStates.noIdeas.title}
+          description={t.emptyStates.noIdeas.description}
           action={
             <NewIdeaDialog>
               <Button size="sm" className="gap-1.5 bg-blue-500 hover:bg-blue-600">

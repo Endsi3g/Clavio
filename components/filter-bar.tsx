@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/select'
 import { Search, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useTranslation } from '@/lib/i18n/provider'
 
 interface FilterOption {
   label: string
@@ -55,13 +56,15 @@ export function FilterBar({
     router.push(`${pathname}?${params.toString()}`)
   }
 
+  const t = useTranslation()
+
   return (
     <div className={cn('flex flex-wrap items-center gap-3', className)}>
       {onSearchChange !== undefined && (
         <div className="relative flex-1 min-w-48 max-w-sm">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <Input
-            placeholder="Search…"
+            placeholder={t.common.search}
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
             className="pl-9"
@@ -100,7 +103,7 @@ export function FilterBar({
               <SelectValue placeholder={filter.label} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">{filter.label}: All</SelectItem>
+              <SelectItem value="all">{filter.label}: {t.common.all}</SelectItem>
               {filter.options.map((opt) => (
                 <SelectItem key={opt.value} value={opt.value}>
                   {opt.label}

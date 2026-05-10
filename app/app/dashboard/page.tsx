@@ -25,11 +25,11 @@ import { formatDistanceToNow, format, isToday, isYesterday } from 'date-fns'
 
 export const dynamic = 'force-dynamic'
 
-function dateLabel(dateStr: string | null) {
+function dateLabel(dateStr: string | null, t: any) {
   if (!dateStr) return ''
   const d = new Date(dateStr)
-  if (isToday(d)) return 'Today'
-  if (isYesterday(d)) return 'Yesterday'
+  if (isToday(d)) return t.common.today
+  if (isYesterday(d)) return t.common.yesterday
   return format(d, 'MMM d')
 }
 
@@ -80,8 +80,8 @@ export default async function DashboardPage() {
     if (err?.message === 'fetch failed' || err?.name === 'TypeError') {
       return (
         <ErrorState
-          title="Failed to connect to database"
-          description="Could not reach the local Supabase server. Run 'npx supabase start' in your terminal."
+          title={t.errorStates.dbConnection.title}
+          description={t.errorStates.dbConnection.description}
         />
       )
     }
@@ -93,19 +93,19 @@ export default async function DashboardPage() {
   const actionItems: ActionItem[] = []
 
   const draftIdeas = ideas.filter(i => i.status === 'draft')
-  draftIdeas.forEach(i => actionItems.push({ type: 'idea', title: `Review idea: "${i.title}"`, description: 'This idea is in draft and needs your attention.', date: i.created_at, href: `/app/ideas/${i.id}` }))
+  draftIdeas.forEach(i => actionItems.push({ type: 'idea', title: `${t.ideas.reviewIdea}: "${i.title}"`, description: i.description || t.ideas.subtitle, date: i.created_at, href: `/app/ideas/${i.id}` }))
 
   const processingVideos = videos.filter(v => v.processing_status === 'processing' || v.status === 'processing')
-  processingVideos.forEach(v => actionItems.push({ type: 'video', title: `Video processing: "${v.title}"`, description: 'Transcription or render job is in progress.', date: v.created_at, href: `/app/videos/${v.id}` }))
+  processingVideos.forEach(v => actionItems.push({ type: 'video', title: `${t.common.processing}: "${v.title}"`, description: t.videos.processing, date: v.created_at, href: `/app/videos/${v.id}` }))
 
   const failedWorkflows = workflows.filter(w => w.status === 'failed')
-  failedWorkflows.forEach(w => actionItems.push({ type: 'error', title: `Workflow failed: ${w.workflow_name}`, description: w.error_message ?? 'A workflow step failed and needs retry.', date: w.started_at, href: '/app/automations' }))
+  failedWorkflows.forEach(w => actionItems.push({ type: 'error', title: `${t.common.failed}: ${w.workflow_name}`, description: w.error_message ?? t.errorStates.loadFailed.description, date: w.started_at, href: '/app/automations' }))
 
   const failedPosts = posts.filter(p => p.status === 'failed')
-  failedPosts.forEach(p => actionItems.push({ type: 'error', title: `Post failed to publish: "${p.title}"`, description: `Platform: ${p.platform}. Check publishing settings.`, date: p.scheduled_for, href: `/app/publishing/${p.id}` }))
+  failedPosts.forEach(p => actionItems.push({ type: 'error', title: `${t.common.failed}: "${p.title}"`, description: `${t.common.platform}: ${p.platform}`, date: p.scheduled_for, href: `/app/publishing/${p.id}` }))
 
   if (actionItems.length === 0) {
-    actionItems.push({ type: 'workflow', title: 'All caught up!', description: 'No urgent actions required right now. Keep creating.', date: null, href: '/app/dashboard' })
+    actionItems.push({ type: 'workflow', title: t.dashboard.allCaughtUp, description: t.dashboard.allCaughtUpDesc, date: null, href: '/app/dashboard' })
   }
 
   // Upcoming posts
@@ -150,7 +150,7 @@ export default async function DashboardPage() {
               {t.dashboard.subtitle}
             </p>
           </div>
-          <RealtimeStatus channelName="dashboard" label="Live" />
+          <RealtimeStatus channelName="dashboard" label={t.common.live} />
         </div>
 
         {/* Things to do */}
@@ -173,7 +173,7 @@ export default async function DashboardPage() {
                   </p>
                 </div>
                 <span className="text-xs text-slate-400 dark:text-slate-500 shrink-0 mt-0.5">
-                  {item.date ? dateLabel(item.date) : ''}
+                  {item.date ? dateLabel(item.date, t) : ''}
                 </span>
               </Link>
             ))}
@@ -187,7 +187,7 @@ export default async function DashboardPage() {
               {t.dashboard.upcomingPosts}
             </h2>
             <Link href="/app/publishing" className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium">
-              View all <ChevronRight className="h-3.5 w-3.5" />
+              {t.common.viewAll} <ChevronRight className="h-3.5 w-3.5" />
             </Link>
           </div>
           <div className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -197,9 +197,6 @@ export default async function DashboardPage() {
                 <p className="text-xs text-slate-500 text-center py-8 italic">
                   {t.dashboard.noPosts}
                 </p>
-                <Link href="/app/publishing" className="mt-2 inline-block text-xs text-blue-500 hover:underline">
-                  Schedule your first post →
-                </Link>
               </div>
             ) : (
               upcomingPosts.slice(0, 4).map(post => (
@@ -224,7 +221,7 @@ export default async function DashboardPage() {
                     </p>
                   </div>
                   <span className="inline-flex items-center rounded-full bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 text-[10px] font-medium text-blue-600 dark:text-blue-400 shrink-0">
-                    Scheduled
+                    {t.publishing.tabs.scheduled}
                   </span>
                 </Link>
               ))
@@ -239,7 +236,7 @@ export default async function DashboardPage() {
               {t.dashboard.recentActivity}
             </h2>
             <Link href="/app/logs" className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium">
-              View all <ChevronRight className="h-3.5 w-3.5" />
+              {t.common.viewAll} <ChevronRight className="h-3.5 w-3.5" />
             </Link>
           </div>
           <div className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -303,7 +300,7 @@ export default async function DashboardPage() {
           <div className="px-4 py-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
             <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t.dashboard.performance}</h2>
             <Link href="/app/analytics" className="flex items-center gap-0.5 text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium">
-              View all <ChevronRight className="h-3.5 w-3.5" />
+              {t.common.viewAll} <ChevronRight className="h-3.5 w-3.5" />
             </Link>
           </div>
           <div className="p-4 space-y-3">
@@ -333,13 +330,13 @@ export default async function DashboardPage() {
           <div className="px-4 py-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
             <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t.dashboard.byPlatform}</h2>
             <Link href="/app/analytics" className="flex items-center gap-0.5 text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium">
-              View all <ChevronRight className="h-3.5 w-3.5" />
+              {t.common.viewAll} <ChevronRight className="h-3.5 w-3.5" />
             </Link>
           </div>
           <div className="divide-y divide-slate-100 dark:divide-slate-800">
             {Object.keys(platformCounts).length === 0 ? (
               <div className="px-4 py-5 text-center">
-                <p className="text-xs text-slate-400 dark:text-slate-500">No posts yet.</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500 italic">{t.common.noData}</p>
               </div>
             ) : (
               Object.entries(platformCounts)

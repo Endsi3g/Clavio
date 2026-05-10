@@ -96,20 +96,20 @@ export function CommandMenu() {
 
       <CommandDialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) { setQuery(''); setResults([]) } }}>
         <CommandInput
-          placeholder="Rechercher ou taper une commande…"
+          placeholder={t.commandMenu.inputPlaceholder}
           value={query}
           onValueChange={setQuery}
         />
         <CommandList>
           {searching && (
             <div className="flex items-center justify-center py-6 text-sm text-slate-500 gap-2">
-              <Loader2 className="h-4 w-4 animate-spin" /> Recherche…
+              <Loader2 className="h-4 w-4 animate-spin" /> {t.commandMenu.searching}
             </div>
           )}
 
           {!searching && results.length > 0 && (
             <>
-              <CommandGroup heading="Résultats">
+              <CommandGroup heading={t.commandMenu.results}>
                 {results.map((r) => (
                   <CommandItem key={`${r.type}-${r.id}`} onSelect={() => run(() => router.push(r.href))}>
                     {TYPE_ICON[r.type]}
@@ -123,73 +123,73 @@ export function CommandMenu() {
           )}
 
           {!searching && query.length >= 2 && results.length === 0 && (
-            <CommandEmpty>Aucun résultat pour « {query} »</CommandEmpty>
+            <CommandEmpty>{t.commandMenu.noResults} « {query} »</CommandEmpty>
           )}
 
-          <CommandGroup heading="Actions rapides">
+          <CommandGroup heading={t.commandMenu.quickActions}>
             <CommandItem onSelect={() => run(() => router.push('/app/ideas'))}>
               <Lightbulb className="mr-2 h-4 w-4 text-amber-500" />
-              <span>Nouvelle idée</span>
+              <span>{t.commandMenu.newIdea}</span>
             </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/app/videos'))}>
               <Play className="mr-2 h-4 w-4 text-purple-500" />
-              <span>Importer une vidéo</span>
+              <span>{t.commandMenu.uploadVideo}</span>
             </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/app/publishing'))}>
               <FileText className="mr-2 h-4 w-4 text-blue-500" />
-              <span>Nouveau brouillon</span>
+              <span>{t.commandMenu.newPostDraft}</span>
             </CommandItem>
           </CommandGroup>
 
           <CommandSeparator />
 
-          <CommandGroup heading="Navigation">
+          <CommandGroup heading={t.commandMenu.navigation}>
             <CommandItem onSelect={() => run(() => router.push('/app/dashboard'))}>
-              <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard
+              <LayoutDashboard className="mr-2 h-4 w-4" /> {t.sidebar.dashboard}
             </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/app/ideas'))}>
-              <Lightbulb className="mr-2 h-4 w-4" /> Idées
+              <Lightbulb className="mr-2 h-4 w-4" /> {t.sidebar.ideas}
             </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/app/videos'))}>
-              <Video className="mr-2 h-4 w-4" /> Vidéos
+              <Video className="mr-2 h-4 w-4" /> {t.sidebar.videos}
             </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/app/clips'))}>
-              <Scissors className="mr-2 h-4 w-4" /> Clips
+              <Scissors className="mr-2 h-4 w-4" /> {t.sidebar.clips}
             </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/app/publishing'))}>
-              <Send className="mr-2 h-4 w-4" /> Publication
+              <Send className="mr-2 h-4 w-4" /> {t.sidebar.publishing}
             </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/app/analytics'))}>
-              <BarChart2 className="mr-2 h-4 w-4" /> Analytiques
+              <BarChart2 className="mr-2 h-4 w-4" /> {t.sidebar.analytics}
             </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/app/calendar'))}>
-              <Calendar className="mr-2 h-4 w-4" /> Calendrier
+              <Calendar className="mr-2 h-4 w-4" /> {t.sidebar.calendar}
             </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/app/templates'))}>
-              <Layout className="mr-2 h-4 w-4" /> Templates
+              <Layout className="mr-2 h-4 w-4" /> {t.sidebar.templates}
             </CommandItem>
           </CommandGroup>
 
           <CommandSeparator />
 
-          <CommandGroup heading="Système">
+          <CommandGroup heading={t.commandMenu.system}>
             <CommandItem onSelect={() => run(() => router.push('/app/assets'))}>
-              <Folder className="mr-2 h-4 w-4" /> Assets
+              <Folder className="mr-2 h-4 w-4" /> {t.sidebar.assets}
             </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/app/automations'))}>
-              <Zap className="mr-2 h-4 w-4" /> Automations
+              <Zap className="mr-2 h-4 w-4" /> {t.sidebar.automations}
             </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/app/integrations'))}>
-              <Plug className="mr-2 h-4 w-4" /> Intégrations
+              <Plug className="mr-2 h-4 w-4" /> {t.sidebar.integrations}
             </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/app/logs'))}>
-              <ScrollText className="mr-2 h-4 w-4" /> Logs
+              <ScrollText className="mr-2 h-4 w-4" /> {t.sidebar.logs}
             </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/app/settings'))}>
-              <Settings className="mr-2 h-4 w-4" /> Paramètres
+              <Settings className="mr-2 h-4 w-4" /> {t.sidebar.settings}
             </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/app/profile'))}>
-              <User2 className="mr-2 h-4 w-4" /> Profil
+              <User2 className="mr-2 h-4 w-4" /> {t.common.profile}
             </CommandItem>
           </CommandGroup>
         </CommandList>
