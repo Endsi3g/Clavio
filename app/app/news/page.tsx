@@ -1,8 +1,10 @@
 import { Card, CardContent } from '@/components/ui/card'
-import { Newspaper, ExternalLink, Sparkles, RefreshCw } from 'lucide-react'
+import { ExternalLink, RefreshCw, Settings2 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { NewsScriptDrawer } from './news-script-drawer'
 import { NewsFilterBar } from './news-filter-bar'
+import { BookmarkButton } from './bookmark-button'
+import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
 
@@ -28,7 +30,7 @@ type Article = {
 async function fetchNews(category: string): Promise<Article[]> {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
   try {
-    const res = await fetch(`${baseUrl}/api/news?category=${category}&limit=20`, {
+    const res = await fetch(`${baseUrl}/api/news?category=${category}&limit=24`, {
       next: { revalidate: 1800 },
     })
     const data = await res.json()
@@ -56,15 +58,24 @@ export default async function NewsPage({
             Stay on top of trending topics and turn them into content instantly.
           </p>
         </div>
-        <form>
-          <button
-            formAction={`/app/news?category=${activeCategory}`}
+        <div className="flex items-center gap-2">
+          <Link
+            href="/app/settings"
             className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
           >
-            <RefreshCw className="h-3.5 w-3.5" />
-            Refresh
-          </button>
-        </form>
+            <Settings2 className="h-3.5 w-3.5" />
+            Preferences
+          </Link>
+          <form>
+            <button
+              formAction={`/app/news?category=${activeCategory}`}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+              Refresh
+            </button>
+          </form>
+        </div>
       </div>
 
       {/* Category Filter */}
@@ -77,7 +88,7 @@ export default async function NewsPage({
             <p className="text-sm text-amber-800">
               No articles loaded.{' '}
               {!process.env.NEWS_API_KEY
-                ? 'Add NEWS_API_KEY to your .env.local file to enable news fetching.'
+                ? 'Add NEWS_API_KEY to your .env.local file to enable NewsAPI fetching. RSS feeds will also appear here when available.'
                 : 'Could not reach the news API. Check your internet connection.'}
             </p>
           </CardContent>
@@ -99,13 +110,12 @@ export default async function NewsPage({
                     src={article.urlToImage}
                     alt={article.title}
                     className="w-full h-full object-cover"
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
                   />
                 </div>
               )}
               <div className="flex flex-col flex-1 p-4 gap-3">
                 <div className="flex-1 space-y-1.5">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
                       {article.source.name}
                     </span>
@@ -132,6 +142,13 @@ export default async function NewsPage({
                     <ExternalLink className="h-3.5 w-3.5" />
                     Read
                   </a>
+                  <BookmarkButton
+                    title={article.title}
+                    url={article.url}
+                    description={article.description}
+                    imageUrl={article.urlToImage}
+                    source={article.source.name}
+                  />
                   <div className="ml-auto">
                     <NewsScriptDrawer article={article} />
                   </div>
