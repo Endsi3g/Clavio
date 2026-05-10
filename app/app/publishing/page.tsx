@@ -1,6 +1,6 @@
 import { createServerClient } from '@/lib/supabase/server'
 import { WORKSPACE_ID } from '@/lib/types'
-import { ErrorState } from '@/components/error-state'
+import { ErrorState } from '@/components/shared/error-state'
 import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type { Post } from '@/lib/types'

@@ -1,8 +1,8 @@
 import { createServerClient } from '@/lib/supabase/server'
 import { WORKSPACE_ID } from '@/lib/types'
-import { MetricCard } from '@/components/metric-card'
-import { EmptyState } from '@/components/empty-state'
-import { ErrorState } from '@/components/error-state'
+import { MetricCard } from '@/components/dashboard/metric-card'
+import { EmptyState } from '@/components/shared/empty-state'
+import { ErrorState } from '@/components/shared/error-state'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Table,
@@ -347,3 +347,4 @@ function StatRow({ label, value }: { label: string; value: string | number }) {
     </div>
   )
 }
+

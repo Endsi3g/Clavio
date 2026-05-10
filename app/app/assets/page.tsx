@@ -1,7 +1,7 @@
 import { createServerClient } from '@/lib/supabase/server'
 import { WORKSPACE_ID } from '@/lib/types'
-import { EmptyState } from '@/components/empty-state'
-import { ErrorState } from '@/components/error-state'
+import { EmptyState } from '@/components/shared/empty-state'
+import { ErrorState } from '@/components/shared/error-state'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -14,7 +14,7 @@ import {
 import { Upload, MoreHorizontal, Image, Music, Film, File, Type, Layout } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import type { Asset } from '@/lib/types'
-import { InstagramCarousel } from '@/components/instagram-carousel'
+import { InstagramCarousel } from '@/components/publishing/instagram-carousel'
 import { AssetsUploadButton } from './assets-upload-button'
 import { AssetRowActions } from './asset-row-actions'
 import { getDictionary } from '@/lib/i18n/server'
@@ -229,3 +229,4 @@ export default async function AssetsPage({
     </div>
   )
 }
+

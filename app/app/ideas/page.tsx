@@ -1,13 +1,13 @@
 import { createServerClient } from '@/lib/supabase/server'
 import { WORKSPACE_ID } from '@/lib/types'
-import { FilterBar } from '@/components/filter-bar'
-import { EmptyState } from '@/components/empty-state'
-import { ErrorState } from '@/components/error-state'
+import { FilterBar } from '@/components/shared/filter-bar'
+import { EmptyState } from '@/components/shared/empty-state'
+import { ErrorState } from '@/components/shared/error-state'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
 import type { Idea } from '@/lib/types'
 import { NewIdeaDialog } from './new-idea-dialog'
-import { RealtimeListener, RealtimeStatus } from '@/components/realtime-listener'
+import { RealtimeListener, RealtimeStatus } from '@/components/providers/realtime-listener'
 import { IdeasGenerateButton } from './ideas-generate-button'
 import { getDictionary } from '@/lib/i18n/server'
 import { IdeasViewClient } from './ideas-view-client'
@@ -139,3 +139,4 @@ export default async function IdeasPage({
     </div>
   )
 }
+

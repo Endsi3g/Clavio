@@ -12,11 +12,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { ThemeToggle } from '@/components/theme-toggle'
+import { ThemeToggle } from '@/components/layout/theme-toggle'
 import { SidebarTrigger } from '@/components/ui/sidebar'
-import { CommandMenu } from '@/components/command-menu'
+import { CommandMenu } from '@/components/layout/command-menu'
 import { NotificationCenter } from './notification-center'
-import { useI18n } from '@/components/i18n-provider'
+import { useI18n } from '@/components/providers/i18n-provider'
 
 function Breadcrumbs({ pathname }: { pathname: string }) {
   const { t } = useI18n()

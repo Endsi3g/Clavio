@@ -1,7 +1,7 @@
 import { createServerClient } from '@/lib/supabase/server'
 import { WORKSPACE_ID } from '@/lib/types'
-import { EmptyState } from '@/components/empty-state'
-import { ErrorState } from '@/components/error-state'
+import { EmptyState } from '@/components/shared/empty-state'
+import { ErrorState } from '@/components/shared/error-state'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
@@ -165,3 +165,4 @@ export default async function LogsPage({
     </div>
   )
 }
+

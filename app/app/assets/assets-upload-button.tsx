@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Upload } from 'lucide-react'
-import { UploadAssetDialog } from '@/components/upload-asset-dialog'
+import { UploadAssetDialog } from '@/components/assets/upload-asset-dialog'
 
 export function AssetsUploadButton() {
   const [open, setOpen] = useState(false)
@@ -18,3 +18,4 @@ export function AssetsUploadButton() {
     </>
   )
 }
+

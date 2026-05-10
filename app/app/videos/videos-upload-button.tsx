@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Upload } from 'lucide-react'
-import { UploadVideoDialog } from '@/components/upload-video-dialog'
+import { UploadVideoDialog } from '@/components/videos/upload-video-dialog'
 
 export function VideosUploadButton() {
   const [open, setOpen] = useState(false)

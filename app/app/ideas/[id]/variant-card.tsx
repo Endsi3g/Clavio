@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { StatusBadge } from '@/components/status-badge'
+import { StatusBadge } from '@/components/shared/status-badge'
 import { Check, X, Loader2, ExternalLink } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { approveVariantAndDraft, rejectVariant } from '@/app/actions/idea-variants'

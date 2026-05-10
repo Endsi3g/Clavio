@@ -1,8 +1,8 @@
 import { createServerClient } from '@/lib/supabase/server'
 import { WORKSPACE_ID } from '@/lib/types'
-import { ErrorState } from '@/components/error-state'
+import { ErrorState } from '@/components/shared/error-state'
 import { getDictionary } from '@/lib/i18n/server'
-import { RealtimeListener, RealtimeStatus } from '@/components/realtime-listener'
+import { RealtimeListener, RealtimeStatus } from '@/components/providers/realtime-listener'
 import {
   Lightbulb,
   Video,
@@ -381,3 +381,4 @@ export default async function DashboardPage() {
     </div>
   )
 }
+

@@ -16,8 +16,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
-import { StatusBadge } from '@/components/status-badge'
-import { EmptyState } from '@/components/empty-state'
+import { StatusBadge } from '@/components/shared/status-badge'
+import { EmptyState } from '@/components/shared/empty-state'
 import { Checkbox } from '@/components/ui/checkbox'
 import { MoreHorizontal, ExternalLink, Calendar, Archive, Send } from 'lucide-react'
 import Link from 'next/link'

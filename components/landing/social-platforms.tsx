@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { BrandIcon, BrandType } from '@/components/brand-icon'
+import { BrandIcon, BrandType } from '@/components/shared/brand-icon'
 
 const PLATFORMS = [
   {

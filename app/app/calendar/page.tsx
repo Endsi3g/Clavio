@@ -1,7 +1,7 @@
 import { createServerClient } from '@/lib/supabase/server'
 import { WORKSPACE_ID } from '@/lib/types'
 import type { Post } from '@/lib/types'
-import { ErrorState } from '@/components/error-state'
+import { ErrorState } from '@/components/shared/error-state'
 import Link from 'next/link'
 import { ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -199,3 +199,4 @@ export default async function CalendarPage({
     </div>
   )
 }
+

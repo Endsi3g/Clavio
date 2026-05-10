@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
 import { LayoutList, LayoutGrid } from 'lucide-react'
-import { StatusBadge } from '@/components/status-badge'
+import { StatusBadge } from '@/components/shared/status-badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
@@ -139,3 +139,4 @@ export function IdeasViewClient({ ideas }: { ideas: Idea[] }) {
     </div>
   )
 }
+

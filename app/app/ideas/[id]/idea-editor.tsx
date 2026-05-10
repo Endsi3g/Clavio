@@ -2,12 +2,12 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { IdeaEditor as TiptapEditor } from '@/components/idea-editor'
+import { IdeaEditor as TiptapEditor } from '@/components/ideas/idea-editor'
 import { toast } from 'sonner'
 import type { Idea } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { Sparkles, Search, BrainCircuit, Loader2 } from 'lucide-react'
-import { ResearchDialog } from '@/components/research-dialog'
+import { ResearchDialog } from '@/components/shared/research-dialog'
 
 export function IdeaEditor({ idea }: { idea: Idea }) {
   const router = useRouter()

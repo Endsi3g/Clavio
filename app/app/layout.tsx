@@ -1,8 +1,8 @@
-import { AppSidebar } from '@/components/app-sidebar'
+import { AppSidebar } from '@/components/layout/app-sidebar'
 import { TopBar } from '@/components/layout/top-bar'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
-import { KeyboardShortcuts } from '@/components/keyboard-shortcuts'
-import { MobileBottomNav } from '@/components/mobile-bottom-nav'
+import { KeyboardShortcuts } from '@/components/shared/keyboard-shortcuts'
+import { MobileBottomNav } from '@/components/layout/mobile-bottom-nav'
 import { getDictionary } from '@/lib/i18n/server'
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   return (

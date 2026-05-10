@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Send } from 'lucide-react'
-import { NewPostDialog } from '@/components/new-post-dialog'
+import { NewPostDialog } from '@/components/publishing/new-post-dialog'
 
 interface Props {
   ideaId: string

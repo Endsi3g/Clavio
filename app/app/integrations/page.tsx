@@ -8,7 +8,7 @@ import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
 
-import { BrandIcon, BrandType } from '@/components/brand-icon'
+import { BrandIcon, BrandType } from '@/components/shared/brand-icon'
 
 const PLATFORMS = [
   { id: 'youtube' as BrandType, name: 'YouTube', description: 'Publish videos, Shorts, and manage your channel.', icon: <BrandIcon brand="youtube" />, cardCls: 'border-red-200 bg-red-50', iconBg: 'bg-red-500', docsUrl: 'https://developers.google.com/youtube/v3' },
@@ -154,3 +154,4 @@ export default async function IntegrationsPage({
     </div>
   )
 }
+

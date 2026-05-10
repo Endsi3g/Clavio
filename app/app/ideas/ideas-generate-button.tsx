@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Sparkles } from 'lucide-react'
-import { GenerateIdeasDialog } from '@/components/generate-ideas-dialog'
+import { GenerateIdeasDialog } from '@/components/ideas/generate-ideas-dialog'
 
 export function IdeasGenerateButton() {
   const [open, setOpen] = useState(false)
@@ -18,3 +18,4 @@ export function IdeasGenerateButton() {
     </>
   )
 }
+

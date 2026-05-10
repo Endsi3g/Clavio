@@ -1,12 +1,12 @@
 import { createServerClient } from '@/lib/supabase/server'
 import { WORKSPACE_ID } from '@/lib/types'
-import { ErrorState } from '@/components/error-state'
-import { EmptyState } from '@/components/empty-state'
-import { StatusBadge } from '@/components/status-badge'
+import { ErrorState } from '@/components/shared/error-state'
+import { EmptyState } from '@/components/shared/empty-state'
+import { StatusBadge } from '@/components/shared/status-badge'
 import { Card, CardContent } from '@/components/ui/card'
-import { FilterBar } from '@/components/filter-bar'
+import { FilterBar } from '@/components/shared/filter-bar'
 import { ClipRowActions } from './clip-row-actions'
-import { VideoPreviewCell } from '@/components/video-preview-cell'
+import { VideoPreviewCell } from '@/components/videos/video-preview-cell'
 import Link from 'next/link'
 import {
   Table,
@@ -188,3 +188,4 @@ export default async function ClipsPage({
     </div>
   )
 }
+
