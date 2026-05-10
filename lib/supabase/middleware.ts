@@ -29,8 +29,10 @@ export async function updateSession(request: NextRequest) {
   const url = request.nextUrl.clone()
   const isAppRoute = url.pathname.startsWith('/app')
   const isAuthRoute = url.pathname.startsWith('/login') || url.pathname.startsWith('/signup')
+  const isLocalhost = url.hostname === 'localhost' || url.hostname === '127.0.0.1'
 
-  if (isAppRoute && !user) {
+  // Skip auth redirect on localhost if not logged in
+  if (isAppRoute && !user && !isLocalhost) {
     url.pathname = '/login'
     return NextResponse.redirect(url)
   }

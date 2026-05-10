@@ -5,6 +5,10 @@ const statusConfig: Record<Status, { label: string; className: string }> = {
     label: 'Brouillon',
     className: 'text-slate-600 border border-slate-300 bg-transparent',
   },
+  pending: {
+    label: 'Attente',
+    className: 'bg-amber-100 text-amber-700 border-0',
+  },
   processing: {
     label: 'En cours',
     className: 'bg-blue-100 text-blue-700 border-0',

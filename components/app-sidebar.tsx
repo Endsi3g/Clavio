@@ -6,10 +6,7 @@ import {
   Lightbulb,
   Video,
   Send,
-  BarChart2,
-  Folder,
   Zap,
-  Plug,
   Link as LinkIcon,
   ScrollText,
   Settings,
@@ -22,6 +19,11 @@ import {
   Layout,
   LogOut,
   Users,
+  Brain,
+  Bot,
+  Film,
+  Webhook,
+  Newspaper,
 } from 'lucide-react'
 import { useI18n } from '@/components/i18n-provider'
 import {
@@ -86,8 +88,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       ]
     },
     {
+      title: 'AI Systems',
+      items: [
+        { label: 'Smart Worker', href: '/app/smart-worker', icon: Brain },
+        { label: 'Agents', href: '/app/agents', icon: Bot },
+        { label: 'Render Engine', href: '/app/render', icon: Film },
+        { label: 'Automation Bridge', href: '/app/automation', icon: Webhook },
+      ]
+    },
+    {
       title: t.sidebar.resources,
       items: [
+        { label: 'News', href: '/app/news', icon: Newspaper },
         { label: t.sidebar.assets, href: '/app/assets', icon: Files },
         { label: 'Templates', href: '/app/templates', icon: Layout },
         { label: t.sidebar.automations, href: '/app/automations', icon: Zap },
@@ -175,13 +187,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 side="top"
                 className="w-[--radix-popper-anchor-width]"
               >
-                <DropdownMenuItem>
-                  <User2 className="mr-2 h-4 w-4" />
-                  <span>Profile</span>
+                <DropdownMenuItem asChild>
+                  <Link href="/app/profile" className="flex items-center">
+                    <User2 className="mr-2 h-4 w-4" />
+                    <span>Profile</span>
+                  </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Preferences</span>
+                <DropdownMenuItem asChild>
+                  <Link href="/app/settings" className="flex items-center">
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Preferences</span>
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
