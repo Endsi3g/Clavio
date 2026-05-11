@@ -11,17 +11,19 @@ export async function PATCH(
 
   try {
     const body = await request.json()
-    const { title, description, prompt, status, priority, format, platform, pillar } = body
+    const { title, description, prompt, script, status, priority, format, platform, pillar, assignee_id } = body
 
     const updates: Record<string, unknown> = { updated_at: new Date().toISOString() }
     if (title !== undefined) updates.title = title
     if (description !== undefined) updates.description = description
     if (prompt !== undefined) updates.prompt = prompt
+    if (script !== undefined) updates.script = script
     if (status !== undefined) updates.status = status
     if (priority !== undefined) updates.priority = priority
     if (format !== undefined) updates.format = format
     if (platform !== undefined) updates.platform = platform
     if (pillar !== undefined) updates.pillar = pillar
+    if (assignee_id !== undefined) updates.assignee_id = assignee_id
 
     const supabase = await createServerClient()
 

@@ -1,5 +1,6 @@
 import { PremiumHero } from '@/components/landing/premium/premium-hero'
 import { StartSection } from '@/components/landing/premium/start-section'
+import { InteractiveDemo } from '@/components/landing/premium/interactive-demo'
 import { FeaturesChess } from '@/components/landing/premium/features-chess'
 import { FeaturesGrid } from '@/components/landing/premium/features-grid'
 import { StatsSection } from '@/components/landing/premium/stats-section'
@@ -12,6 +13,7 @@ export default function LandingPage() {
       <PremiumHero />
       <div className="relative z-10 bg-black w-full flex flex-col items-center overflow-hidden">
         <StartSection />
+        <InteractiveDemo />
         <FeaturesChess />
         <FeaturesGrid />
         <StatsSection />

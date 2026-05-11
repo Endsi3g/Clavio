@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Building2, Send, Cpu, Wrench, Palette, CreditCard, Bell } from 'lucide-react'
+import { Building2, Send, Cpu, Wrench, Palette, CreditCard, Bell, Building } from 'lucide-react'
 import Link from 'next/link'
 import { getDictionary } from '@/lib/i18n/server'
 import {
@@ -15,10 +15,12 @@ import {
   saveNotificationSettings,
   clearLogs,
 } from '@/app/actions/settings'
+import { TeamSettings } from '@/components/settings/team-settings'
+import { Users } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
-type SettingsTab = 'workspace' | 'publishing' | 'ai' | 'notifications' | 'maintenance'
+type SettingsTab = 'workspace' | 'publishing' | 'ai' | 'notifications' | 'team' | 'maintenance'
 
 export default async function SettingsPage({
   searchParams,
@@ -26,7 +28,7 @@ export default async function SettingsPage({
   searchParams: Promise<Record<string, string>>
 }) {
   const params = await searchParams
-  const activeTab: SettingsTab = (['workspace', 'publishing', 'ai', 'notifications', 'maintenance'].includes(params.tab ?? '')
+  const activeTab: SettingsTab = (['workspace', 'publishing', 'ai', 'notifications', 'team', 'maintenance'].includes(params.tab ?? '')
     ? params.tab
     : 'workspace') as SettingsTab
 
@@ -59,6 +61,7 @@ export default async function SettingsPage({
   const notificationSoundEnabled = (settingsMap['notification_sound_enabled'] as boolean) ?? true
   const notificationSoundFile = (settingsMap['notification_sound_file'] as string) ?? 'pop'
   const notificationTypes = (settingsMap['notification_types'] as string[]) ?? ['info', 'success', 'warning', 'error']
+  const teamMembers = (settingsMap['team_members'] as any[]) ?? []
 
   return (
     <div className="space-y-5 max-w-3xl">
@@ -93,6 +96,12 @@ export default async function SettingsPage({
               Notifications
             </a>
           </TabsTrigger>
+          <TabsTrigger value="team" className="gap-1.5" asChild>
+            <a href="?tab=team">
+              <Users className="h-3.5 w-3.5" />
+              Team
+            </a>
+          </TabsTrigger>
           <TabsTrigger value="maintenance" className="gap-1.5" asChild>
             <a href="?tab=maintenance">
               <Wrench className="h-3.5 w-3.5" />
@@ -104,7 +113,11 @@ export default async function SettingsPage({
         <div className="flex items-center gap-2 mt-2">
           <Link href="/app/settings/brand-kit" className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:border-slate-300 hover:bg-slate-50 transition-colors">
             <Palette className="h-3.5 w-3.5" />
-            Brand Kit
+            Global Brand Kit
+          </Link>
+          <Link href="/app/settings/brands" className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:border-slate-300 hover:bg-slate-50 transition-colors">
+            <Building className="h-3.5 w-3.5" />
+            Agency Clients
           </Link>
           <Link href="/app/settings/billing" className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:border-slate-300 hover:bg-slate-50 transition-colors">
             <CreditCard className="h-3.5 w-3.5" />
@@ -302,6 +315,11 @@ export default async function SettingsPage({
               </form>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Team tab */}
+        <TabsContent value="team" className="mt-5 space-y-5">
+          <TeamSettings initialMembers={teamMembers} />
         </TabsContent>
 
         {/* Maintenance tab */}

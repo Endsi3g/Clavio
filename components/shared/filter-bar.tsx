@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/select'
 import { Search, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useTranslation } from '@/lib/i18n/provider'
+import { useI18n } from '@/components/providers/i18n-provider'
 
 interface FilterOption {
   label: string
@@ -56,7 +56,7 @@ export function FilterBar({
     router.push(`${pathname}?${params.toString()}`)
   }
 
-  const t = useTranslation()
+  const { t } = useI18n()
 
   return (
     <div className={cn('flex flex-wrap items-center gap-3', className)}>

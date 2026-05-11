@@ -35,6 +35,8 @@ import { IdeaEditor } from './idea-editor'
 import { VariantCard } from './variant-card'
 import { ScriptStudio } from './script-studio'
 import { CreatePostFromIdeaButton } from './create-post-button'
+import { EditableIdeaHeader } from '@/components/ideas/editable-idea-header'
+import { CommentsWidget } from '@/components/shared/comments-widget'
 
 export const dynamic = 'force-dynamic'
 
@@ -46,7 +48,7 @@ export default async function IdeaDetailPage({
   const { id } = await params
   const supabase = await createServerClient()
 
-  const [ideaResult, variantsResult, postsResult] = await Promise.all([
+  const [ideaResult, variantsResult, postsResult, settingsResult] = await Promise.all([
     supabase
       .from('ideas')
       .select('*')
@@ -64,6 +66,12 @@ export default async function IdeaDetailPage({
       .select('id, title, platform, status, scheduled_for')
       .eq('idea_id', id)
       .eq('workspace_id', WORKSPACE_ID),
+    supabase
+      .from('settings')
+      .select('value_json')
+      .eq('workspace_id', WORKSPACE_ID)
+      .eq('key', 'team_members')
+      .maybeSingle()
   ])
 
   if (!ideaResult.data) notFound()
@@ -71,6 +79,7 @@ export default async function IdeaDetailPage({
   const idea: Idea = ideaResult.data
   const variants: IdeaVariant[] = variantsResult.data ?? []
   const posts: PostSummary[] = postsResult.data ?? []
+  const teamMembers = (settingsResult.data?.value_json as any[]) ?? []
 
   return (
     <div className="space-y-5">
@@ -84,14 +93,7 @@ export default async function IdeaDetailPage({
           Ideas
         </Link>
         <div className="flex items-start justify-between gap-4">
-          <div className="flex-1 min-w-0">
-            <h1 className="text-2xl font-semibold tracking-tight text-slate-900 leading-tight">
-              {idea.title}
-            </h1>
-            {idea.description && (
-              <p className="mt-1.5 text-sm text-slate-500 max-w-2xl">{idea.description}</p>
-            )}
-          </div>
+          <EditableIdeaHeader idea={idea} teamMembers={teamMembers} />
           <div className="flex items-center gap-2 shrink-0">
             <Button variant="outline" size="sm" className="gap-1.5">
               <Sparkles className="h-3.5 w-3.5" />
@@ -285,6 +287,12 @@ export default async function IdeaDetailPage({
               </CardContent>
             </Card>
           )}
+
+          <Card>
+            <CardContent className="pt-6">
+              <CommentsWidget entityId={idea.id} entityType="idea" />
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

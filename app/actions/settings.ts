@@ -102,3 +102,23 @@ export async function saveNotificationSettings(formData: FormData) {
 
   redirect('/app/settings?tab=notifications&saved=1')
 }
+
+export async function saveTeamMembers(teamMembersJson: string) {
+  const supabase = await createServerClient()
+  try {
+    const parsed = JSON.parse(teamMembersJson)
+    await supabase.from('settings').upsert(
+      { workspace_id: WORKSPACE_ID, key: 'team_members', value_json: parsed, updated_at: new Date().toISOString() },
+      { onConflict: 'workspace_id,key' }
+    )
+    await supabase.from('logs').insert({
+      workspace_id: WORKSPACE_ID,
+      severity: 'info',
+      source: 'settings/team',
+      message: `Team members updated`,
+    })
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: 'Failed to parse or save team members' }
+  }
+}

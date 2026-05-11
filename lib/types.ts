@@ -16,11 +16,40 @@ export type Severity = 'info' | 'warning' | 'error' | 'debug'
 
 export type Priority = 'low' | 'medium' | 'high'
 
-export type IntegrationStatus = 'connected' | 'disconnected' | 'error'
+export interface Brand {
+  id: string
+  workspace_id: string
+  name: string
+  logo_url: string | null
+  brand_color: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface Comment {
+  id: string
+  workspace_id: string
+  entity_type: string
+  entity_id: string
+  author_id: string | null
+  author_name: string | null
+  content: string
+  created_at: string
+  updated_at: string
+}
+
+export interface TeamMember {
+  id: string
+  name: string
+  role: string
+  avatar_url?: string | null
+}
 
 export interface Idea {
   id: string
   workspace_id: string
+  assignee_id: string | null
+  brand_id: string | null
   title: string
   description: string | null
   format: string | null
@@ -106,6 +135,7 @@ export interface Post {
   workspace_id: string
   idea_id: string | null
   clip_id: string | null
+  brand_id: string | null
   platform: string
   title: string
   caption: string | null
