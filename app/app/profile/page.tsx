@@ -152,7 +152,7 @@ export default function ProfilePage() {
                           Choose image
                         </Button>
                         <p className="text-xs text-slate-500">JPG, PNG or GIF. Max 2 MB.</p>
-                        <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
+                        <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" aria-label="Upload profile photo" />
                       </div>
                     </div>
                   </div>

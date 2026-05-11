@@ -30,6 +30,8 @@ export async function updateSession(request: NextRequest) {
   const isAppRoute = url.pathname.startsWith('/app')
   const isAuthRoute = url.pathname.startsWith('/login') || url.pathname.startsWith('/signup')
   const isLocalhost = url.hostname === 'localhost' || url.hostname === '127.0.0.1'
+  const isOnboardingRoute = url.pathname === '/app/onboarding'
+  const onboardingDone = request.cookies.get('onboarding_completed')?.value === 'true'
 
   // Skip auth redirect on localhost if not logged in
   if (isAppRoute && !user && !isLocalhost) {
@@ -39,6 +41,12 @@ export async function updateSession(request: NextRequest) {
 
   if (isAuthRoute && user) {
     url.pathname = '/app/dashboard'
+    return NextResponse.redirect(url)
+  }
+
+  // Gate: authenticated user who hasn't completed onboarding
+  if (isAppRoute && user && !onboardingDone && !isOnboardingRoute) {
+    url.pathname = '/app/onboarding'
     return NextResponse.redirect(url)
   }
 

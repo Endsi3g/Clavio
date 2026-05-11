@@ -256,6 +256,7 @@ export default async function SettingsPage({
                     id="notification-sound-enabled"
                     name="notification_sound_enabled"
                     defaultChecked={notificationSoundEnabled}
+                    aria-label="Enable notification sound"
                     className="h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-600"
                   />
                 </div>
@@ -266,6 +267,7 @@ export default async function SettingsPage({
                     id="notification-sound-file"
                     name="notification_sound_file"
                     defaultValue={notificationSoundFile}
+                    aria-label="Select notification sound"
                     className="flex h-9 w-full rounded-md border border-slate-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500"
                   >
                     <option value="pop">Pop</option>

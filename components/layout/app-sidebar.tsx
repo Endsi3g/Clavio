@@ -135,17 +135,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent className="px-2 gap-0">
         {navCategories.map((category) => {
-          const isWorkspace = category.title === t.sidebar.workspace
-          const isExpanded = expandedGroups[category.title] ?? true
+          const isAlwaysOpen = category.title === t.sidebar.workspace || category.title === t.sidebar.system
+          const isExpanded = isAlwaysOpen || (expandedGroups[category.title] ?? true)
 
           return (
             <SidebarGroup key={category.title} className="pt-4 pb-2">
               <SidebarGroupLabel
-                onClick={() => !isWorkspace && toggleGroup(category.title)}
-                className={`flex items-center justify-between w-full select-none ${!isWorkspace ? 'cursor-pointer hover:text-slate-900 dark:hover:text-white transition-colors' : ''}`}
+                onClick={() => !isAlwaysOpen && toggleGroup(category.title)}
+                className={`flex items-center justify-between w-full select-none ${!isAlwaysOpen ? 'cursor-pointer hover:text-slate-900 dark:hover:text-white transition-colors' : ''}`}
               >
                 {category.title}
-                {!isWorkspace && (
+                {!isAlwaysOpen && (
                   <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isExpanded ? '' : '-rotate-90'}`} />
                 )}
               </SidebarGroupLabel>
