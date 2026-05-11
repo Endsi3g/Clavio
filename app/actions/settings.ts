@@ -77,3 +77,28 @@ export async function clearLogs() {
   await supabase.from('logs').delete().eq('workspace_id', WORKSPACE_ID)
   redirect('/app/settings?tab=maintenance&saved=1')
 }
+
+export async function saveNotificationSettings(formData: FormData) {
+  const soundEnabled = formData.get('notification_sound_enabled') === 'on'
+  const soundFile = (formData.get('notification_sound_file') as string) || 'pop'
+  const typesRaw = formData.getAll('notification_types') as string[]
+  
+  const supabase = await createServerClient()
+  await supabase.from('settings').upsert(
+    [
+      { workspace_id: WORKSPACE_ID, key: 'notification_sound_enabled', value_json: soundEnabled, updated_at: new Date().toISOString() },
+      { workspace_id: WORKSPACE_ID, key: 'notification_sound_file', value_json: soundFile, updated_at: new Date().toISOString() },
+      { workspace_id: WORKSPACE_ID, key: 'notification_types', value_json: typesRaw, updated_at: new Date().toISOString() },
+    ],
+    { onConflict: 'workspace_id,key' }
+  )
+
+  await supabase.from('logs').insert({
+    workspace_id: WORKSPACE_ID,
+    severity: 'info',
+    source: 'settings/notifications',
+    message: `Notification settings updated`,
+  })
+
+  redirect('/app/settings?tab=notifications&saved=1')
+}

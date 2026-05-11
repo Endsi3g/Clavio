@@ -11,6 +11,7 @@ import {
   ScrollText,
   Settings,
   ChevronUp,
+  ChevronDown,
   User2,
   Languages,
   BarChart3,
@@ -58,6 +59,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const router = useRouter()
   const { t, locale, setLocale } = useI18n()
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/')
+
+  const [expandedGroups, setExpandedGroups] = React.useState<Record<string, boolean>>({
+    [t.sidebar.workspace]: true,
+    [t.sidebar.aiSystems]: true,
+    [t.sidebar.resources]: true,
+    [t.sidebar.system]: true,
+  })
+
+  const toggleGroup = (title: string) => {
+    setExpandedGroups(prev => ({ ...prev, [title]: !prev[title] }))
+  }
 
   const [userEmail, setUserEmail] = React.useState<string>('')
   const [userInitial, setUserInitial] = React.useState<string>('C')
@@ -122,25 +134,41 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <WorkspaceSwitcher />
       </SidebarHeader>
       <SidebarContent className="px-2 gap-0">
-        {navCategories.map((category) => (
-          <SidebarGroup key={category.title} className="pt-4 pb-2">
-            <SidebarGroupLabel>{category.title}</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {category.items.map((item) => (
-                  <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton asChild isActive={isActive(item.href)}>
-                      <Link href={item.href}>
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.label}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        ))}
+        {navCategories.map((category) => {
+          const isWorkspace = category.title === t.sidebar.workspace
+          const isExpanded = expandedGroups[category.title] ?? true
+
+          return (
+            <SidebarGroup key={category.title} className="pt-4 pb-2">
+              <SidebarGroupLabel
+                onClick={() => !isWorkspace && toggleGroup(category.title)}
+                className={`flex items-center justify-between w-full select-none ${!isWorkspace ? 'cursor-pointer hover:text-slate-900 dark:hover:text-white transition-colors' : ''}`}
+              >
+                {category.title}
+                {!isWorkspace && (
+                  <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isExpanded ? '' : '-rotate-90'}`} />
+                )}
+              </SidebarGroupLabel>
+              
+              {isExpanded && (
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {category.items.map((item) => (
+                      <SidebarMenuItem key={item.href}>
+                        <SidebarMenuButton asChild isActive={isActive(item.href)}>
+                          <Link href={item.href}>
+                            <item.icon className="h-4 w-4" />
+                            <span>{item.label}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              )}
+            </SidebarGroup>
+          )
+        })}
       </SidebarContent>
 
       <SidebarFooter className="p-4 border-t border-slate-200 dark:border-slate-800">

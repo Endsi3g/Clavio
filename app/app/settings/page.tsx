@@ -5,19 +5,20 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Building2, Send, Cpu, Wrench, Palette, CreditCard } from 'lucide-react'
+import { Building2, Send, Cpu, Wrench, Palette, CreditCard, Bell } from 'lucide-react'
 import Link from 'next/link'
 import { getDictionary } from '@/lib/i18n/server'
 import {
   saveWorkspaceSettings,
   savePublishingSettings,
   saveAISettings,
+  saveNotificationSettings,
   clearLogs,
 } from '@/app/actions/settings'
 
 export const dynamic = 'force-dynamic'
 
-type SettingsTab = 'workspace' | 'publishing' | 'ai' | 'maintenance'
+type SettingsTab = 'workspace' | 'publishing' | 'ai' | 'notifications' | 'maintenance'
 
 export default async function SettingsPage({
   searchParams,
@@ -25,7 +26,7 @@ export default async function SettingsPage({
   searchParams: Promise<Record<string, string>>
 }) {
   const params = await searchParams
-  const activeTab: SettingsTab = (['workspace', 'publishing', 'ai', 'maintenance'].includes(params.tab ?? '')
+  const activeTab: SettingsTab = (['workspace', 'publishing', 'ai', 'notifications', 'maintenance'].includes(params.tab ?? '')
     ? params.tab
     : 'workspace') as SettingsTab
 
@@ -55,6 +56,9 @@ export default async function SettingsPage({
   const hashtagLimit = (settingsMap['hashtag_limit'] as number) ?? 10
   const ollamaModel = (settingsMap['ollama_model'] as string) ?? 'llama3.2'
   const whisperModel = (settingsMap['whisper_model'] as string) ?? 'base'
+  const notificationSoundEnabled = (settingsMap['notification_sound_enabled'] as boolean) ?? true
+  const notificationSoundFile = (settingsMap['notification_sound_file'] as string) ?? 'pop'
+  const notificationTypes = (settingsMap['notification_types'] as string[]) ?? ['info', 'success', 'warning', 'error']
 
   return (
     <div className="space-y-5 max-w-3xl">
@@ -81,6 +85,12 @@ export default async function SettingsPage({
             <a href="?tab=ai">
               <Cpu className="h-3.5 w-3.5" />
               AI
+            </a>
+          </TabsTrigger>
+          <TabsTrigger value="notifications" className="gap-1.5" asChild>
+            <a href="?tab=notifications">
+              <Bell className="h-3.5 w-3.5" />
+              Notifications
             </a>
           </TabsTrigger>
           <TabsTrigger value="maintenance" className="gap-1.5" asChild>
@@ -221,6 +231,70 @@ export default async function SettingsPage({
                 <div className="flex justify-end">
                   <Button type="submit" size="sm" className="bg-blue-500 hover:bg-blue-600">
                     Save AI settings
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Notifications tab */}
+        <TabsContent value="notifications" className="mt-5 space-y-5">
+          <Card>
+            <CardHeader className="pb-4">
+              <CardTitle className="text-base font-semibold">In-app notifications</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form action={saveNotificationSettings} className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="notification-sound-enabled" className="text-sm font-medium text-slate-900">Enable sound</Label>
+                    <p className="text-xs text-slate-500">Play a sound when a new notification arrives.</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    id="notification-sound-enabled"
+                    name="notification_sound_enabled"
+                    defaultChecked={notificationSoundEnabled}
+                    className="h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-600"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="notification-sound-file">Sound file</Label>
+                  <select
+                    id="notification-sound-file"
+                    name="notification_sound_file"
+                    defaultValue={notificationSoundFile}
+                    className="flex h-9 w-full rounded-md border border-slate-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500"
+                  >
+                    <option value="pop">Pop</option>
+                    <option value="chime">Chime</option>
+                    <option value="bloop">Bloop</option>
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Notify me for events of type:</Label>
+                  <div className="flex flex-col gap-2 mt-2">
+                    {['info', 'success', 'warning', 'error'].map((type) => (
+                      <label key={type} className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          name="notification_types"
+                          value={type}
+                          defaultChecked={notificationTypes.includes(type)}
+                          className="rounded border-slate-300"
+                        />
+                        <span className="text-sm capitalize">{type}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex justify-end">
+                  <Button type="submit" size="sm" className="bg-blue-500 hover:bg-blue-600">
+                    Save notifications
                   </Button>
                 </div>
               </form>

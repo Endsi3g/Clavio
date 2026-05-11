@@ -69,7 +69,9 @@ const config: Config = {
   			],
   			mono: [
   				'monospace'
-  			]
+  			],
+        heading: ["'Instrument Serif'", "serif"],
+        body: ["'Barlow'", "sans-serif"],
   		},
   		borderRadius: {
   			lg: 'var(--radius)',
@@ -78,25 +80,29 @@ const config: Config = {
   		},
   		keyframes: {
   			'accordion-down': {
-  				from: {
-  					height: '0'
-  				},
-  				to: {
-  					height: 'var(--radix-accordion-content-height)'
-  				}
+  				from: { height: '0' },
+  				to: { height: 'var(--radix-accordion-content-height)' }
   			},
   			'accordion-up': {
-  				from: {
-  					height: 'var(--radix-accordion-content-height)'
-  				},
-  				to: {
-  					height: '0'
-  				}
-  			}
+  				from: { height: 'var(--radix-accordion-content-height)' },
+  				to: { height: '0' }
+  			},
+        fadeSlideIn: {
+          to: { opacity: '1', filter: 'blur(0px)', transform: 'translateY(0px)' },
+        },
+        slideRightIn: {
+          to: { opacity: '1', filter: 'blur(0px)', transform: 'translateX(0px)' },
+        },
+        testimonialIn: {
+          to: { opacity: '1', filter: 'blur(0px)', transform: 'translateY(0px) scale(1)' },
+        }
   		},
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
-  			'accordion-up': 'accordion-up 0.2s ease-out'
+  			'accordion-up': 'accordion-up 0.2s ease-out',
+        element: 'fadeSlideIn 0.8s ease-out forwards',
+        'slide-right': 'slideRightIn 0.8s ease-out forwards',
+        testimonial: 'testimonialIn 0.8s ease-out forwards'
   		}
   	}
   },
